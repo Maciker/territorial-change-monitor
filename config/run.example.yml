@@ -1,0 +1,7 @@
+aoi: config/aoi.example.geojson
+collection: sentinel-2-l2a
+before_date: 2024-06-01
+after_date: 2025-06-01
+max_cloud_cover: 20
+index: ndvi
+change_threshold: 0.20
