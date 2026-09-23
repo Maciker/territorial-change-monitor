@@ -49,9 +49,12 @@
     "build:server": "tsc -p tsconfig.build.json",
     "demo": "pnpm build && node dist/apps/cli/src/main.js demo",
     "validate": "pnpm build && node dist/apps/cli/src/main.js validate",
-    "select": "pnpm build && node dist/apps/cli/src/main.js select"
+    "select": "pnpm build && node dist/apps/cli/src/main.js select",
+    "read": "pnpm build && node dist/apps/cli/src/main.js read",
+    "fixtures:rasters": "pnpm build && node tools/generate-raster-fixtures.mjs"
   },
   "dependencies": {
+    "geotiff": "^3.0.5",
     "yaml": "^2.7.0"
   },
   "pnpm": {

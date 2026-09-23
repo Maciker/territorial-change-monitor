@@ -12,3 +12,5 @@ export { createRunContract, navarreExampleContract } from "./run-contract.js";
 export type { BoundingBox, ObservationWindow, OutputManifestSchema, RunContract, RunContractInput } from "./run-contract.js";
 export { intersectionCoveragePercent, selectComparableScenes } from "./scene.js";
 export type { CatalogItem, Scene, SceneBand, SceneBandName, ScenePair } from "./scene.js";
+export { applyScaleOffset, assertPixelBudget, assertSameGrid, combineMasks, validityMask } from "./raster-grid.js";
+export type { RasterBand } from "./raster-grid.js";
