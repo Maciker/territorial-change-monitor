@@ -7,6 +7,11 @@ export function normalizedDifference(first: Float32Array, second: Float32Array):
   });
 }
 
+export function maskedNormalizedDifference(first: Float32Array, second: Float32Array, valid: Uint8Array): Float32Array {
+  const values = normalizedDifference(first, second);
+  return values.map((value, index) => (valid[index] === 1 ? value : Number.NaN));
+}
+
 export { DomainError } from "./domain-error.js";
 export { createRunContract, navarreExampleContract } from "./run-contract.js";
 export type { BoundingBox, ObservationWindow, OutputManifestSchema, RunContract, RunContractInput } from "./run-contract.js";
