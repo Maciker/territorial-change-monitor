@@ -48,7 +48,8 @@
     "setup:hooks": "bash scripts/install-githooks.sh",
     "build:server": "tsc -p tsconfig.build.json",
     "demo": "pnpm build && node dist/apps/cli/src/main.js demo",
-    "validate": "pnpm build && node dist/apps/cli/src/main.js validate"
+    "validate": "pnpm build && node dist/apps/cli/src/main.js validate",
+    "select": "pnpm build && node dist/apps/cli/src/main.js select"
   },
   "dependencies": {
     "yaml": "^2.7.0"

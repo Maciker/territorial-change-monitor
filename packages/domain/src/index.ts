@@ -10,3 +10,5 @@ export function normalizedDifference(first: Float32Array, second: Float32Array):
 export { DomainError } from "./domain-error.js";
 export { createRunContract, navarreExampleContract } from "./run-contract.js";
 export type { BoundingBox, ObservationWindow, OutputManifestSchema, RunContract, RunContractInput } from "./run-contract.js";
+export { intersectionCoveragePercent, selectComparableScenes } from "./scene.js";
+export type { CatalogItem, Scene, SceneBand, SceneBandName, ScenePair } from "./scene.js";

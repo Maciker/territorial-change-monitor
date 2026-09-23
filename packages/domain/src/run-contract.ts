@@ -39,7 +39,7 @@ export type RunContract = RunContractInput & {
   outputManifest: OutputManifestSchema;
 };
 
-export const navarreExampleContract: RunContractInput = {
+const navarreExampleInput: RunContractInput = {
   question: "Where did the land-surface spectral signal change between June 2024 and June 2025 in the example Navarre AOI?",
   aoi: { west: -1.76, south: 42.8, east: -1.75, north: 42.81, crs: supportedAoiCrs },
   before: { start: "2024-06-01", end: "2024-06-30" },
@@ -82,6 +82,8 @@ export function createRunContract(input: RunContractInput): RunContract {
   }
   return { ...input, outputManifest };
 }
+
+export const navarreExampleContract = createRunContract(navarreExampleInput);
 
 function parseIsoDate(value: string): number {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
