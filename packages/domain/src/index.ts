@@ -13,8 +13,10 @@ export function maskedNormalizedDifference(first: Float32Array, second: Float32A
 }
 
 export { DomainError } from "./domain-error.js";
-export { createRunContract, navarreExampleContract } from "./run-contract.js";
+export { aoiAreaKm2, createRunContract, navarreExampleContract } from "./run-contract.js";
 export type { BoundingBox, ObservationWindow, OutputManifestSchema, RunContract, RunContractInput } from "./run-contract.js";
+export { reviewCandidateChange } from "./change-review.js";
+export type { ChangeReview, ChangeReviewInput, ChangeSign } from "./change-review.js";
 export { intersectionCoveragePercent, selectComparableScenes } from "./scene.js";
 export type { CatalogItem, Scene, SceneBand, SceneBandName, ScenePair } from "./scene.js";
 export { applyScaleOffset, assertPixelBudget, assertSameGrid, combineMasks, validityMask } from "./raster-grid.js";

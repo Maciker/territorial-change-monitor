@@ -5,3 +5,4 @@ export type { AlignedRasterPair, MaskedSceneRasters } from "./read-aligned-raste
 export type { RasterReader } from "./ports/raster-reader.js";
 export { computeNdviDifference } from "./compute-ndvi-difference.js";
 export type { DifferenceProvenance, NdviDifferenceResult } from "./compute-ndvi-difference.js";
+export { reviewDifference } from "./review-change.js";

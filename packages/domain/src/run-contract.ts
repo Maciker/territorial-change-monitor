@@ -67,7 +67,7 @@ export function createRunContract(input: RunContractInput): RunContract {
   if (input.aoi.crs !== supportedAoiCrs) {
     throw DomainError.createValidation(`Unsupported CRS: ${input.aoi.crs}`);
   }
-  if (areaKm2(input.aoi) > maxAoiAreaKm2) {
+  if (aoiAreaKm2(input.aoi) > maxAoiAreaKm2) {
     throw DomainError.createValidation("Area of interest is unbounded for this MVP");
   }
   const beforeStart = parseIsoDate(input.before.start);
@@ -96,7 +96,7 @@ function parseIsoDate(value: string): number {
   return timestamp;
 }
 
-function areaKm2(aoi: BoundingBox): number {
+export function aoiAreaKm2(aoi: BoundingBox): number {
   const toRadians = (degrees: number) => (degrees * Math.PI) / 180;
   const meanLatitude = (aoi.south + aoi.north) / 2;
   const widthKm = toRadians(aoi.east - aoi.west) * Math.cos(toRadians(meanLatitude)) * earthRadiusKm;
