@@ -4,7 +4,7 @@
 Compare a bounded pair of Sentinel-2 observations, mask invalid pixels and report candidate spectral change with provenance.
 
 ## Foundation delivered by this branch
-The normalized-difference kernel and its known-result test are ported to TypeScript. STAC, raster I/O, masking, pipeline and map are pending.
+The normalized-difference kernel and a validated Navarre run contract are in TypeScript. STAC, raster I/O, masking, pipeline and map are pending.
 
 ## Constraints
 - TypeScript application code, Node 22/24, pnpm workspaces.
