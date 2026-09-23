@@ -6,3 +6,5 @@ export type { RasterReader } from "./ports/raster-reader.js";
 export { computeNdviDifference } from "./compute-ndvi-difference.js";
 export type { DifferenceProvenance, NdviDifferenceResult } from "./compute-ndvi-difference.js";
 export { reviewDifference } from "./review-change.js";
+export { executeChangeRun } from "./execute-change-run.js";
+export type { RunRecord, RunStage, RunStore } from "./ports/run-store.js";

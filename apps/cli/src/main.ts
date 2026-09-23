@@ -1,5 +1,6 @@
-import { computeNdviDifference, readAlignedRasters, reviewDifference, selectScenes } from "../../../packages/application/src/index.js";
+import { computeNdviDifference, executeChangeRun, readAlignedRasters, reviewDifference, selectScenes } from "../../../packages/application/src/index.js";
 import { formatKernelDemo } from "./demo.js";
+import { FilesystemRunStore } from "./filesystem-run-store.js";
 import { FixtureStacAdapter } from "./fixture-stac-adapter.js";
 import { GeotiffRasterAdapter } from "./geotiff-raster-adapter.js";
 import { loadRunContract } from "./load-run-contract.js";
@@ -37,9 +38,19 @@ if (command === "validate") {
   writeDifferenceResult("outputs/fixture-run", result);
   const recipe = writeQgisRecipe("outputs/fixture-run");
   console.log(`Candidates: ${review.candidateCount}; recipe: ${recipe}`);
+} else if (command === "run") {
+  const contract = loadRunContract("config/run.example.yml", "config/aoi.example.geojson");
+  const record = await executeChangeRun({
+    contract,
+    catalog: FixtureStacAdapter.fromFile("test/fixtures/stac/navarre-items.json"),
+    reader: new GeotiffRasterAdapter(),
+    store: new FilesystemRunStore("outputs/fixture-run"),
+    signal: AbortSignal.timeout(30_000),
+  });
+  console.log(`Run ${record.status}; stages: ${record.completedStages.join(",")}`);
 } else if (command === "demo") {
   console.log(formatKernelDemo());
 } else {
-  console.error("Supported commands: demo, validate, select, read, difference, review");
+  console.error("Supported commands: demo, validate, select, read, difference, review, run");
   process.exitCode = 1;
 }
