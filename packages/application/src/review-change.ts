@@ -12,9 +12,9 @@ export function reviewDifference(
     valid: difference.valid,
     width: rasters.before.red.width,
     height: rasters.before.red.height,
-    bbox: contract.aoi,
+    bbox: rasters.before.red.bbox,
     threshold: contract.changeThreshold,
-    sign: "afterMinusBefore",
-    minimumRegionPixels: 1,
+    sign: contract.changeSign,
+    minimumRegionPixels: contract.minimumRegionPixels,
   });
 }

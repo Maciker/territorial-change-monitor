@@ -5,13 +5,13 @@ import { DomainError, applyScaleOffset, assertPixelBudget, type RasterBand } fro
 import { rasterLimits, type RasterReader } from "../../../packages/application/src/index.js";
 
 export class GeotiffRasterAdapter implements RasterReader {
+  async digest(path: string): Promise<string> {
+    return createHash("sha256").update(readBounded(path)).digest("hex");
+  }
+
   async readBand(path: string, scale: number, offset: number): Promise<RasterBand> {
-    const size = statSync(path).size;
-    if (size > rasterLimits.maxBytes) {
-      throw DomainError.createValidation("Raster exceeds the download budget");
-    }
-    const bytes = readFileSync(path);
-    const image = await (await fromArrayBuffer(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength))).getImage();
+    const bytes = readBounded(path);
+    const image = await (await fromArrayBuffer(Uint8Array.from(bytes).buffer)).getImage();
     const width = image.getWidth();
     const height = image.getHeight();
     assertPixelBudget(width, height, rasterLimits.maxPixels);
@@ -36,6 +36,14 @@ export class GeotiffRasterAdapter implements RasterReader {
       hash: createHash("sha256").update(bytes).digest("hex"),
     };
   }
+}
+
+function readBounded(path: string): Buffer {
+  const size = statSync(path).size;
+  if (size > rasterLimits.maxBytes) {
+    throw DomainError.createValidation("Raster exceeds the download budget");
+  }
+  return readFileSync(path);
 }
 
 function readEpsg(keys: { GeographicTypeGeoKey?: number; ProjectedCSTypeGeoKey?: number }): string {

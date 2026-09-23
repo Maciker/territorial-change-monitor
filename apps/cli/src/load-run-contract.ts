@@ -9,6 +9,8 @@ type RunFile = {
   max_cloud_cover?: number;
   index?: string;
   change_threshold?: number;
+  change_sign?: string;
+  minimum_region_pixels?: number;
   success_condition?: string;
   limitations?: string[];
   source_license?: string;
@@ -44,8 +46,15 @@ export function loadRunContract(yamlPath: string, aoiPath: string): RunContract 
     maxCloudCoverPercent: file.max_cloud_cover ?? 20,
     index: "ndvi",
     changeThreshold: file.change_threshold ?? 0.2,
+    changeSign: changeSign(file.change_sign),
+    minimumRegionPixels: file.minimum_region_pixels ?? 1,
   };
   return createRunContract(input);
+}
+
+function changeSign(value: string | undefined): "afterMinusBefore" {
+  if (value === undefined || value === "afterMinusBefore") return "afterMinusBefore";
+  throw DomainError.createValidation("Unsupported change sign");
 }
 
 function requiredText(value: string | undefined, field: string): string {

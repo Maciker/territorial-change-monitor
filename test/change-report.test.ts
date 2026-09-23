@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { navarreExampleContract } from "../packages/domain/src/index.js";
-import { createRunView, formatChangeReport } from "../packages/application/src/index.js";
+import { createRunView, formatChangeReport, viewFromFixture, type StoredRunFixture } from "../packages/application/src/index.js";
 
 describe("The change report", () => {
   it("explains the question, method, evidence and limitations without causal claims", () => {
@@ -12,11 +12,15 @@ describe("The change report", () => {
       candidateCount: 1,
       validCoverage: 0.5,
       threshold: 0.2,
+      acquiredBefore: "2024-06-12T10:55:00Z",
+      acquiredAfter: "2025-06-11T10:55:00Z",
     });
 
     expect(report).toContain(navarreExampleContract.question);
     expect(report).toContain("NDVI");
     expect(report).toContain("S2A_20240612_NAVARRE");
+    expect(report).toContain("2024-06-12T10:55:00Z");
+    expect(report).toContain("2025-06-11T10:55:00Z");
     expect(report).toContain("not evidence of cause");
     expect(report).not.toMatch(/caused|deforestation|illegal/i);
   });
@@ -39,7 +43,20 @@ describe("The change report", () => {
         afterNdvi: [0],
         difference: [0],
         valid: [0],
+        acquiredBefore: "2024-06-12T10:55:00Z",
+        acquiredAfter: "2025-06-11T10:55:00Z",
       }).kind,
     ).toBe("insufficient");
+  });
+
+  it("shows fixture acquisition times on the ready view", () => {
+    const fixture = JSON.parse(readFileSync("apps/web/public/run.fixture.json", "utf8")) as StoredRunFixture;
+
+    const view = viewFromFixture(fixture, navarreExampleContract);
+
+    expect(view.kind).toBe("ready");
+    if (view.kind !== "ready") return;
+    expect(view.report).toContain(fixture.acquiredBefore);
+    expect(view.metadata.acquiredAfter).toBe(fixture.acquiredAfter);
   });
 });

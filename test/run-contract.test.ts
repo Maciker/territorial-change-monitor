@@ -9,6 +9,8 @@ describe("The run contract", () => {
     expect(contract.aoi.crs).toBe("EPSG:4326");
     expect(contract.sourceLicense).toContain("Copernicus");
     expect(contract.units).toBe("dimensionless NDVI difference");
+    expect(contract.changeSign).toBe("afterMinusBefore");
+    expect(contract.minimumRegionPixels).toBe(1);
     expect(contract.outputManifest.fields).toEqual([
       "question",
       "crs",
@@ -17,6 +19,9 @@ describe("The run contract", () => {
       "before",
       "after",
       "limitations",
+      "changeThreshold",
+      "changeSign",
+      "minimumRegionPixels",
     ]);
   });
 

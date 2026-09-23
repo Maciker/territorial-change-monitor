@@ -10,6 +10,8 @@ after:
 max_cloud_cover: 20
 index: ndvi
 change_threshold: 0.20
+change_sign: afterMinusBefore
+minimum_region_pixels: 1
 success_condition: Candidate change is flagged only on valid pixels using a predeclared NDVI difference threshold.
 limitations:
   - Spectral change is not evidence of cause.

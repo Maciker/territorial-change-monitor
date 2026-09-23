@@ -33,6 +33,8 @@ export type RunContractInput = {
   maxCloudCoverPercent: number;
   index: "ndvi";
   changeThreshold: number;
+  changeSign: "afterMinusBefore";
+  minimumRegionPixels: number;
 };
 
 export type RunContract = RunContractInput & {
@@ -54,10 +56,23 @@ const navarreExampleInput: RunContractInput = {
   maxCloudCoverPercent: 20,
   index: "ndvi",
   changeThreshold: 0.2,
+  changeSign: "afterMinusBefore",
+  minimumRegionPixels: 1,
 };
 
 const outputManifest: OutputManifestSchema = {
-  fields: ["question", "crs", "units", "sourceLicense", "before", "after", "limitations"],
+  fields: [
+    "question",
+    "crs",
+    "units",
+    "sourceLicense",
+    "before",
+    "after",
+    "limitations",
+    "changeThreshold",
+    "changeSign",
+    "minimumRegionPixels",
+  ],
 };
 
 export function createRunContract(input: RunContractInput): RunContract {
@@ -79,6 +94,12 @@ export function createRunContract(input: RunContractInput): RunContract {
   }
   if (input.maxCloudCoverPercent < 0 || input.maxCloudCoverPercent > 100) {
     throw DomainError.createValidation("Cloud cover percent is outside 0-100");
+  }
+  if (input.changeSign !== "afterMinusBefore") {
+    throw DomainError.createValidation("Unsupported change sign");
+  }
+  if (!Number.isInteger(input.minimumRegionPixels) || input.minimumRegionPixels < 1) {
+    throw DomainError.createValidation("Minimum region size must be at least 1 pixel");
   }
   return { ...input, outputManifest };
 }

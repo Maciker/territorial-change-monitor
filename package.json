@@ -11,7 +11,7 @@
   "scripts": {
     "build": "pnpm build:server && pnpm --filter @gis/territorial-change-monitor-web build",
     "web": "pnpm --filter @gis/territorial-change-monitor-web dev",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p apps/web/tsconfig.json --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vitest run",

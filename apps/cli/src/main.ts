@@ -50,6 +50,8 @@ if (command === "validate") {
         candidateCount: record.review.candidateCount,
         validCoverage: record.validCoverage ?? 0,
         threshold: record.review.threshold,
+        acquiredBefore: record.acquiredBefore ?? "",
+        acquiredAfter: record.acquiredAfter ?? "",
       }),
     );
   }

@@ -12,6 +12,9 @@ export type RunRecord = {
   validCoverage?: number;
   beforeId?: string;
   afterId?: string;
+  acquiredBefore?: string;
+  acquiredAfter?: string;
+  sourceHashes?: Record<string, string>;
 };
 
 export type RunStore = {
