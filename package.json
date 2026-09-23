@@ -9,7 +9,8 @@
   },
   "packageManager": "pnpm@10.17.1",
   "scripts": {
-    "build": "pnpm build:server",
+    "build": "pnpm build:server && pnpm --filter @gis/territorial-change-monitor-web build",
+    "web": "pnpm --filter @gis/territorial-change-monitor-web dev",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

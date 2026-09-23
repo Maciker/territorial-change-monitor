@@ -40,6 +40,9 @@ export async function executeChangeRun(options: {
     abortIfNeeded(options.signal, options.store, record);
     const difference = computeNdviDifference(options.contract, pair, rasters);
     record.completedStages.push("difference");
+    record.validCoverage = difference.validCoverage;
+    record.beforeId = pair.before.id;
+    record.afterId = pair.after.id;
     abortIfNeeded(options.signal, options.store, record);
     record.review = reviewDifference(options.contract, rasters, difference);
     record.completedStages.push("review");

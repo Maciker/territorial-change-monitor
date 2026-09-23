@@ -35,6 +35,7 @@ export default tseslint.config(
       "hermes/**",
       ".agents/**",
       "agents/**",
+      "apps/web/**",
     ],
   },
   js.configs.recommended,

@@ -1,10 +1,13 @@
-import { computeNdviDifference, executeChangeRun, readAlignedRasters, reviewDifference, selectScenes } from "../../../packages/application/src/index.js";
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { computeNdviDifference, executeChangeRun, formatChangeReport, readAlignedRasters, reviewDifference, selectScenes } from "../../../packages/application/src/index.js";
 import { formatKernelDemo } from "./demo.js";
 import { FilesystemRunStore } from "./filesystem-run-store.js";
 import { FixtureStacAdapter } from "./fixture-stac-adapter.js";
 import { GeotiffRasterAdapter } from "./geotiff-raster-adapter.js";
 import { loadRunContract } from "./load-run-contract.js";
 import { writeDifferenceResult } from "./write-difference-result.js";
+import { writeGeotiff } from "./write-geotiff.js";
 import { writeQgisRecipe } from "./write-qgis-recipe.js";
 
 const command = process.argv[2] ?? "demo";
@@ -47,10 +50,27 @@ if (command === "validate") {
     store: new FilesystemRunStore("outputs/fixture-run"),
     signal: AbortSignal.timeout(30_000),
   });
+  if (record.review) {
+    writeFileSync(
+      join("outputs/fixture-run", "report.txt"),
+      formatChangeReport({
+        contract,
+        beforeId: record.beforeId ?? "unknown",
+        afterId: record.afterId ?? "unknown",
+        candidateCount: record.review.candidateCount,
+        validCoverage: record.validCoverage ?? 0,
+        threshold: record.review.threshold,
+      }),
+    );
+  }
   console.log(`Run ${record.status}; stages: ${record.completedStages.join(",")}`);
+} else if (command === "fixtures") {
+  const bbox = loadRunContract("config/run.example.yml", "config/aoi.example.geojson").aoi;
+  writeGeotiff("test/fixtures/rasters/before-red.tif", [1000, 1000, 0, 2000], 2, 2, bbox, 32);
+  console.log("Raster fixtures refreshed.");
 } else if (command === "demo") {
   console.log(formatKernelDemo());
 } else {
-  console.error("Supported commands: demo, validate, select, read, difference, review, run");
+  console.error("Supported commands: demo, validate, select, read, difference, review, run, fixtures");
   process.exitCode = 1;
 }

@@ -1,0 +1,20 @@
+{
+  "status": "complete",
+  "beforeId": "S2A_20240612_NAVARRE",
+  "afterId": "S2A_20250611_NAVARRE",
+  "candidateCount": 1,
+  "validCoverage": 0.5,
+  "threshold": 0.2,
+  "question": "Where did the land-surface spectral signal change between June 2024 and June 2025 in the example Navarre AOI?",
+  "limitations": [
+    "Spectral change is not evidence of cause.",
+    "Seasonality and residual clouds can produce false positives."
+  ],
+  "bbox": { "west": -1.76, "south": 42.8, "east": -1.75, "north": 42.81, "crs": "EPSG:4326" },
+  "beforeNdvi": [0.5, 0, null, 0],
+  "afterNdvi": [0, 0.5, null, 0],
+  "difference": [-0.5, null, null, 0],
+  "valid": [1, 0, 0, 1],
+  "acquiredBefore": "2024-06-12T10:55:00Z",
+  "acquiredAfter": "2025-06-11T10:55:00Z"
+}

@@ -9,6 +9,9 @@ export type RunRecord = {
   cacheHit: boolean;
   error?: string;
   review?: ChangeReview;
+  validCoverage?: number;
+  beforeId?: string;
+  afterId?: string;
 };
 
 export type RunStore = {
