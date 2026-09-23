@@ -54,7 +54,7 @@
     "read": "pnpm build && node dist/apps/cli/src/main.js read",
     "difference": "pnpm build && node dist/apps/cli/src/main.js difference",
     "review": "pnpm build && node dist/apps/cli/src/main.js review",
-    "run": "pnpm build && node dist/apps/cli/src/main.js run",
+    "change-run": "pnpm build && node dist/apps/cli/src/main.js run",
     "fixtures:rasters": "pnpm build && node tools/generate-raster-fixtures.mjs"
   },
   "dependencies": {

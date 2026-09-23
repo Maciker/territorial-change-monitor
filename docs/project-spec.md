@@ -3,8 +3,8 @@
 ## Outcome
 Compare a bounded pair of Sentinel-2 observations, mask invalid pixels and report candidate spectral change with provenance.
 
-## Foundation delivered by this branch
-The normalized-difference kernel and a validated Navarre run contract are in TypeScript. STAC, raster I/O, masking, pipeline and map are pending.
+## Foundation delivered
+The TypeScript fixture MVP is implemented: Navarre run contract, STAC selection, raster I/O and masks, NDVI difference, thresholded review, resumable CLI, and a local map/report. Live STAC downloads remain optional and are excluded from CI.
 
 ## Constraints
 - TypeScript application code, Node 22/24, pnpm workspaces.
@@ -14,7 +14,7 @@ The normalized-difference kernel and a validated Navarre run contract are in Typ
 - Local demo first, bounded inputs and resources; no hosted service, billing or automatic publishing.
 
 ## Acceptance source
-[Tracker #6](https://github.com/Maciker/territorial-change-monitor/issues/6) is the authoritative product backlog. Each linked ticket provides a vertical user outcome, dependencies and testable acceptance criteria.
+Linear project Territorial Change Monitor, parent [MAC-18](https://linear.app/maciker/issue/MAC-18/roadmap-deliver-the-typescript-gis-mvp-with-the-shared-agent-workflow), mirrors GitHub tracker #6.
 
 ## Workflow references
 Use domain-modeling for contracts, architecture-hexagonal for ports/adapters, xp-tdd-practices and testing-standards for behavior, frontend-patterns for React, git-strategy for branches and qa-review for independent review. See canonical `.ai/skills/*/SKILL.md` and `.ai/commands/to-spec.md`, `to-tickets.md`.
