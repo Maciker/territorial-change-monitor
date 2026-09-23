@@ -4,9 +4,9 @@ Compare a bounded pair of Sentinel-2 observations, mask invalid pixels and repor
 
 ## Current state
 
-The normalized-difference kernel and its known-result test are ported to TypeScript. STAC, raster I/O, masking, pipeline and map are pending. This is a foundation, not a completed GIS product.
+The TypeScript MVP runs offline against recorded fixtures: a frozen Navarre AOI, STAC selection, aligned GeoTIFF reads, masked NDVI difference, thresholded review, resumable CLI, and a local MapLibre report. It does not download live imagery in CI and does not claim a cause for change.
 
-All application, CLI and API code uses TypeScript on Node.js. QGIS desktop and PostGIS SQL remain GIS tools. There is no Python, FastAPI or PyQGIS runtime.
+All application, CLI and web code uses TypeScript on Node.js. QGIS desktop and PostGIS SQL remain GIS tools. There is no Python, FastAPI or PyQGIS runtime.
 
 ## Start
 
@@ -17,9 +17,12 @@ corepack enable
 pnpm install --frozen-lockfile
 pnpm quality:fast
 pnpm build
+pnpm validate
+pnpm change-run
+pnpm web
 ```
 
-See [local development](docs/development.md), [project specification](docs/project-spec.md), [architecture](docs/architecture.md) and [roadmap](docs/roadmap.md).
+`pnpm change-run` writes `outputs/fixture-run/` (gitignored). `pnpm web` serves the local viewer. See [local development](docs/development.md), [fixtures](docs/fixtures.md), [project specification](docs/project-spec.md), [architecture](docs/architecture.md) and [roadmap](docs/roadmap.md).
 
 ## Agent workflow
 
@@ -31,6 +34,6 @@ Run `pnpm quality:full` and `pnpm quality:stabilization` before review. Independ
 
 ## Work order
 
-Start with [foundation #7](https://github.com/Maciker/territorial-change-monitor/issues/7), then follow [MVP tracker #6](https://github.com/Maciker/territorial-change-monitor/issues/6). Tickets specify dependencies, acceptance tests and relevant skills. No feature is complete merely because its ticket exists.
+The foundation is on `main`. Remaining product work is tracked in Linear project Territorial Change Monitor (parent [MAC-18](https://linear.app/maciker/issue/MAC-18/roadmap-deliver-the-typescript-gis-mvp-with-the-shared-agent-workflow)). Tickets specify dependencies, acceptance tests and relevant skills.
 
 Keep source data immutable. Only tiny, licensed fixtures belong in Git; real datasets and generated outputs stay local.
