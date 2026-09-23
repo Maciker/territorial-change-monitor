@@ -1,30 +1,36 @@
 # Territorial Change Monitor
 
-A reproducible, local-first workflow for detecting and explaining land-surface change from open satellite imagery.
+Compare a bounded pair of Sentinel-2 observations, mask invalid pixels and report candidate spectral change with provenance.
 
-This portfolio project focuses on a small area of interest in Spain. It demonstrates STAC discovery, cloud-aware image selection, raster processing, change metrics, quality controls, and an explainable map/report.
+## Current state
 
-## First release
+The normalized-difference kernel and its known-result test are ported to TypeScript. STAC, raster I/O, masking, pipeline and map are pending. This is a foundation, not a completed GIS product.
 
-1. Define one small AOI and a land-change question.
-2. Search public Sentinel-2 imagery through STAC.
-3. Select comparable low-cloud scenes and document the selection.
-4. Compute an NDVI difference product and a change mask.
-5. Produce a map, a concise report, and a reproducible run command.
+All application, CLI and API code uses TypeScript on Node.js. QGIS desktop and PostGIS SQL remain GIS tools. There is no Python, FastAPI or PyQGIS runtime.
 
-## Repository structure
+## Start
 
-- `config/` — example AOI and run configuration.
-- `src/` — reusable processing code.
-- `notebooks/` — exploratory work only; promote stable logic to `src/`.
-- `docs/` — project brief, methodology, and data policy.
-- `data/` — instructions and small fixtures; raw imagery is ignored.
-- `outputs/` — generated products, ignored by Git.
+Use Node.js 22 or 24 and pnpm 10.17.1 (pinned in package.json).
 
-## Scope guardrails
+```sh
+corepack enable
+pnpm install --frozen-lockfile
+pnpm quality:fast
+pnpm build
+```
 
-The first release answers one specific question over one AOI. It does not claim a universal land-cover classifier, infer causation from change, or depend on paid APIs.
+See [local development](docs/development.md), [project specification](docs/project-spec.md), [architecture](docs/architecture.md) and [roadmap](docs/roadmap.md).
 
-## Learning connection
+## Agent workflow
 
-This is the second portfolio project in the [Modern Geospatial Engineering roadmap](https://github.com/Maciker/modern-geospatial-engineering).
+Canonical instructions and skills are in `.ai/`, with generated adapters for Cursor, Codex, Copilot and Hermes. OpenCode can read root `AGENTS.md` and the named skill files explicitly. No automatic OpenCode discovery is assumed.
+
+Imported from [agent-workflow-code-ts](https://github.com/Maciker/agent-workflow-code-ts/tree/97d01f03436cbbf35936c172008e74e55be56dd5). The pin, upstream MIT attribution and local adaptations are recorded in [workflow provenance](docs/workflow-provenance.json). This is a vendored snapshot: upstream changes require a reviewed update and regeneration, not a floating dependency on main.
+
+Run `pnpm quality:full` and `pnpm quality:stabilization` before review. Independent cross-model QA and human approval are merge requirements. Provider credentials are optional for local deterministic checks.
+
+## Work order
+
+Start with [foundation #7](https://github.com/Maciker/territorial-change-monitor/issues/7), then follow [MVP tracker #6](https://github.com/Maciker/territorial-change-monitor/issues/6). Tickets specify dependencies, acceptance tests and relevant skills. No feature is complete merely because its ticket exists.
+
+Keep source data immutable. Only tiny, licensed fixtures belong in Git; real datasets and generated outputs stay local.

@@ -1,7 +1,9 @@
-.PHONY: test lint
-
+.PHONY: install test check build
+install:
+	pnpm install --frozen-lockfile
 test:
-	pytest
-
-lint:
-	ruff check src tests
+	pnpm test
+check:
+	pnpm quality:full
+build:
+	pnpm build

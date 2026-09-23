@@ -1,15 +1,25 @@
-# Local data and generated outputs
-data/raw/
-data/interim/
-data/processed/
-outputs/
-.venv/
-__pycache__/
-.pytest_cache/
-.ipynb_checkpoints/
-.env
+node_modules/
+dist/
+.quality/
 
-# Editors
-.vscode/
-.idea/
+# Generated workspace artifacts are ignored by .ai/workspace/.gitignore;
+# the workspace directory structure is kept via tracked .gitkeep files.
+
+# Sandbox worktrees
+.sandbox/
+
+# Local env
+.env
+.env.*
+!.env.example
+
+# Editor/OS
 .DS_Store
+*.log
+
+# Local geospatial assets and reports
+data/raw/
+outputs/
+coverage/
+playwright-report/
+test-results/
