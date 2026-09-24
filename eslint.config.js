@@ -40,6 +40,21 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    files: ["apps/web/src/**/*.ts", "apps/web/src/**/*.tsx"],
+    languageOptions: {
+      parserOptions: {
+        project: "./apps/web/tsconfig.json",
+        tsconfigRootDir: import.meta.dirname,
+        ecmaFeatures: { jsx: true },
+      },
+      globals: {
+        fetch: "readonly",
+        window: "readonly",
+        document: "readonly",
+      },
+    },
+  },
+  {
     files: ["packages/**/*.ts", "apps/api/**/*.ts", "apps/cli/**/*.ts"],
     languageOptions: {
       parserOptions: {

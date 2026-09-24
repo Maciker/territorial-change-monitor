@@ -9,8 +9,9 @@
   },
   "packageManager": "pnpm@10.17.1",
   "scripts": {
-    "build": "pnpm build:server",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "pnpm build:server && pnpm --filter @gis/territorial-change-monitor-web build",
+    "web": "pnpm --filter @gis/territorial-change-monitor-web dev",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p apps/web/tsconfig.json --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vitest run",
@@ -47,9 +48,17 @@
     "doctor": "node tools/diagnostics/doctor.mjs",
     "setup:hooks": "bash scripts/install-githooks.sh",
     "build:server": "tsc -p tsconfig.build.json",
-    "demo": "pnpm build && node dist/apps/cli/src/main.js"
+    "demo": "pnpm build && node dist/apps/cli/src/main.js demo",
+    "validate": "pnpm build && node dist/apps/cli/src/main.js validate",
+    "select": "pnpm build && node dist/apps/cli/src/main.js select",
+    "read": "pnpm build && node dist/apps/cli/src/main.js read",
+    "difference": "pnpm build && node dist/apps/cli/src/main.js difference",
+    "review": "pnpm build && node dist/apps/cli/src/main.js review",
+    "change-run": "pnpm build && node dist/apps/cli/src/main.js run",
+    "fixtures:rasters": "pnpm build && node tools/generate-raster-fixtures.mjs"
   },
   "dependencies": {
+    "geotiff": "^3.0.5",
     "yaml": "^2.7.0"
   },
   "pnpm": {
