@@ -26,7 +26,7 @@
     "quality:fast": "pnpm typecheck && pnpm lint && pnpm test",
     "quality:full": "pnpm typecheck && pnpm lint && pnpm test && pnpm arch && pnpm deadcode && pnpm dup && pnpm quality:ratchet",
     "quality:ci": "pnpm typecheck && pnpm lint && pnpm test && pnpm arch && pnpm deadcode && pnpm dup && pnpm quality:ratchet",
-    "quality:agent": "pnpm quality:full && pnpm qa:gate",
+    "quality:agent": "pnpm quality:full && pnpm prepr:gate",
     "loop": "node tools/loop/verify-and-iterate.mjs run",
     "loop:status": "node tools/loop/verify-and-iterate.mjs status",
     "loop:reset": "node tools/loop/verify-and-iterate.mjs reset",
@@ -55,7 +55,9 @@
     "difference": "pnpm build && node dist/apps/cli/src/main.js difference",
     "review": "pnpm build && node dist/apps/cli/src/main.js review",
     "change-run": "pnpm build && node dist/apps/cli/src/main.js run",
-    "fixtures:rasters": "pnpm build && node tools/generate-raster-fixtures.mjs"
+    "fixtures:rasters": "pnpm build && node tools/generate-raster-fixtures.mjs",
+    "qa:record": "node tools/qa/record-qa-run.mjs",
+    "prepr:gate": "node tools/qa/pre-pr-gate.mjs"
   },
   "dependencies": {
     "geotiff": "^3.0.5",
