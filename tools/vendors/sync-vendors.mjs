@@ -236,6 +236,7 @@ const promptMappings = [
   'review',
   'qa',
   'pre-pr',
+  'post-pr-review',
   'quality',
   'validate',
   'refactor',

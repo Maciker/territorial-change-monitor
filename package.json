@@ -57,7 +57,8 @@
     "change-run": "pnpm build && node dist/apps/cli/src/main.js run",
     "fixtures:rasters": "pnpm build && node tools/generate-raster-fixtures.mjs",
     "qa:record": "node tools/qa/record-qa-run.mjs",
-    "prepr:gate": "node tools/qa/pre-pr-gate.mjs"
+    "prepr:gate": "node tools/qa/pre-pr-gate.mjs",
+    "pr:review": "node tools/pr/post-pr-review.mjs"
   },
   "dependencies": {
     "geotiff": "^3.0.5",
