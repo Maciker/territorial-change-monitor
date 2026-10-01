@@ -142,3 +142,7 @@ Before Cursor opens a PR for agent-generated changes:
 4. Record and validate the JSON report, then run `pnpm prepr:gate`.
 5. Stop on `stop`, P0/P1, failed deterministic checks/tests, or unavailable independent model. Limit correction rounds to two and repeat the gate after every change.
 6. Do not open a PR if the report, SHA, input hash, worktree snapshot or model evidence is missing. A direct GitHub/API/vendor PR route may bypass this local workflow gate and is outside its coverage.
+
+## Mandatory post-PR review
+
+After creating a PR, invoke the portable post-PR review and run `pnpm run pr:review -- --input <post-pr-review-input.json> --report <post-pr-review-report.json>`. Re-review after every push; do not merge, deploy or auto-merge while the result is not APPROVED.

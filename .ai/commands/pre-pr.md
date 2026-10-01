@@ -42,3 +42,7 @@ Use this command after the executor finishes an implementation and before Cursor
 9. Only after pnpm prepr:gate passes may Cursor use its supported PR-creation action. Include the commands, exact models, score/decision, limitations and the fact that Cursor will perform a separate PR review. Do not merge or deploy.
 
 The gate protects the supported workflow path. A vendor or external integration that creates a PR without running this command may bypass it and must be documented as outside the covered path.
+
+## Post-PR review
+
+After creating a PR, run `pnpm run pr:review -- --input <post-pr-review-input.json> --report <post-pr-review-report.json>` against the exact base/head SHA. Only APPROVED with durable evidence can proceed; PENDING, BLOCKED and CHANGES_REQUESTED stop the flow.

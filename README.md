@@ -37,3 +37,7 @@ Run `pnpm quality:full`, `pnpm prepr:gate` and `pnpm quality:stabilization` befo
 The foundation is on `main`. Remaining product work is tracked in Linear project Territorial Change Monitor (parent [MAC-18](https://linear.app/maciker/issue/MAC-18/roadmap-deliver-the-typescript-gis-mvp-with-the-shared-agent-workflow)). Tickets specify dependencies, acceptance tests and relevant skills.
 
 Keep source data immutable. Only tiny, licensed fixtures belong in Git; real datasets and generated outputs stay local.
+
+## Post-PR review
+
+Run `pnpm run pr:review -- --input <post-pr-review-input.json> --report <post-pr-review-report.json>` after PR creation. Only APPROVED is eligible for human merge consideration.
