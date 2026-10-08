@@ -28,6 +28,55 @@ describe("The viewer run artifacts", () => {
     expect(view.metadata.validCoverage).toBe(0.5);
     expect(view.report).toContain("1 candidate");
   });
+
+  it("surfaces incomplete and cancelled runs as failed instead of ready", () => {
+    const incomplete = viewFromRunArtifacts(
+      { ...completeRecord(), status: "incomplete" },
+      differencePayload(),
+      navarreExampleContract,
+    );
+    const cancelled = viewFromRunArtifacts(
+      { ...completeRecord(), status: "cancelled" },
+      differencePayload(),
+      navarreExampleContract,
+    );
+
+    expect(incomplete.kind).toBe("failed");
+    if (incomplete.kind === "failed") expect(incomplete.message).toMatch(/incomplete/i);
+    expect(cancelled.kind).toBe("failed");
+    if (cancelled.kind === "failed") expect(cancelled.message).toMatch(/incomplete/i);
+  });
+
+  it("surfaces a failed run with the recorded error", () => {
+    const view = viewFromRunArtifacts(
+      { ...completeRecord(), status: "failed", error: "disk budget exceeded" },
+      differencePayload(),
+      navarreExampleContract,
+    );
+
+    expect(view.kind).toBe("failed");
+    if (view.kind === "failed") expect(view.message).toContain("disk budget exceeded");
+  });
+
+  it("rejects missing run or missing difference artifacts", () => {
+    const missingRun = viewFromRunArtifacts(undefined, differencePayload(), navarreExampleContract);
+    const missingDifference = viewFromRunArtifacts(completeRecord(), undefined, navarreExampleContract);
+
+    expect(missingRun.kind).toBe("failed");
+    if (missingRun.kind === "failed") expect(missingRun.message).toMatch(/missing|incomplete/i);
+    expect(missingDifference.kind).toBe("failed");
+    if (missingDifference.kind === "failed") expect(missingDifference.message).toMatch(/missing|incomplete/i);
+  });
+
+  it("marks low valid coverage as insufficient for review", () => {
+    const view = viewFromRunArtifacts(
+      completeRecord(),
+      { ...differencePayload(), validCoverage: 0.05 },
+      navarreExampleContract,
+    );
+
+    expect(view.kind).toBe("insufficient");
+  });
 });
 
 function completeRecord(): RunRecord {
