@@ -140,7 +140,7 @@ export function viewFromRunArtifacts(
   if (record === undefined) {
     return createRunView({
       status: "failed",
-      error: "Missing or incomplete run artifacts under outputs/fixture-run.",
+      error: "Missing or incomplete run artifacts.",
     });
   }
   if (record.status === "incomplete" || record.status === "cancelled") {
@@ -157,7 +157,7 @@ export function viewFromRunArtifacts(
   if (difference === undefined) {
     return createRunView({
       status: "failed",
-      error: "Missing or incomplete run artifacts under outputs/fixture-run.",
+      error: "Missing or incomplete run artifacts.",
     });
   }
   return createRunView({

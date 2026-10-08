@@ -7,8 +7,8 @@ import { executeChangeRun } from "../packages/application/src/index.js";
 import { FixtureStacAdapter } from "../apps/cli/src/fixture-stac-adapter.js";
 import { FilesystemRunStore } from "../apps/cli/src/filesystem-run-store.js";
 import { GeotiffRasterAdapter } from "../apps/cli/src/geotiff-raster-adapter.js";
-import { writeDifferenceResult } from "../apps/cli/src/write-difference-result.js";
 import { writeGeotiff } from "../apps/cli/src/write-geotiff.js";
+import { writeRunViewerArtifacts } from "../apps/cli/src/write-run-viewer-artifacts.js";
 
 describe("The bounded change run", () => {
   it("completes stages and writes a finished record", async () => {
@@ -27,7 +27,7 @@ describe("The bounded change run", () => {
     expect(JSON.parse(readFileSync(join(directory, "run.json"), "utf8")).status).toBe("complete");
   });
 
-  it("exposes NDVI difference arrays for a complete computation so the viewer can persist them", async () => {
+  it("stores NDVI difference beside the finished run record for the local viewer", async () => {
     const directory = mkdtempSync(join(tmpdir(), "change-run-"));
     const store = new FilesystemRunStore(directory);
 
@@ -37,18 +37,24 @@ describe("The bounded change run", () => {
       reader: new GeotiffRasterAdapter(),
       store,
     });
-    const path = writeDifferenceResult(directory, result.difference!);
-    const stored = JSON.parse(readFileSync(path, "utf8")) as {
+    const differencePath = writeRunViewerArtifacts(directory, result.difference);
+    const run = JSON.parse(readFileSync(join(directory, "run.json"), "utf8")) as {
+      status: string;
+      validCoverage: number;
+      acquiredBefore: string;
+    };
+    const stored = JSON.parse(readFileSync(differencePath!, "utf8")) as {
       validCoverage: number;
       beforeNdvi: number[];
-      difference: Array<number | null>;
       valid: number[];
     };
 
     expect(result.record.status).toBe("complete");
     expect(result.difference).toBeDefined();
-    expect(result.difference?.validCoverage).toBe(result.record.validCoverage);
-    expect(result.difference?.valid.length).toBeGreaterThan(0);
+    expect(differencePath).toBe(join(directory, "ndvi-difference.json"));
+    expect(run.status).toBe("complete");
+    expect(run.validCoverage).toBe(result.record.validCoverage);
+    expect(run.acquiredBefore).toBe(result.record.acquiredBefore);
     expect(stored.validCoverage).toBe(result.record.validCoverage);
     expect(stored.beforeNdvi).toHaveLength(result.difference!.beforeNdvi.length);
     expect(stored.valid).toEqual(Array.from(result.difference!.valid));

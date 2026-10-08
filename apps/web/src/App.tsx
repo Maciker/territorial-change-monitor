@@ -39,13 +39,17 @@ export function App() {
 }
 
 async function loadRunArtifacts(): Promise<RunView> {
-  const [runResponse, differenceResponse] = await Promise.all([
-    fetch("/run.json"),
-    fetch("/ndvi-difference.json"),
-  ]);
-  const record = runResponse.ok ? ((await runResponse.json()) as RunRecord) : undefined;
-  const difference = differenceResponse.ok
-    ? ((await differenceResponse.json()) as StoredDifferencePayload)
-    : undefined;
-  return viewFromRunArtifacts(record, difference, navarreExampleContract);
+  try {
+    const [runResponse, differenceResponse] = await Promise.all([
+      fetch("/run.json"),
+      fetch("/ndvi-difference.json"),
+    ]);
+    const record = runResponse.ok ? ((await runResponse.json()) as RunRecord) : undefined;
+    const difference = differenceResponse.ok
+      ? ((await differenceResponse.json()) as StoredDifferencePayload)
+      : undefined;
+    return viewFromRunArtifacts(record, difference, navarreExampleContract);
+  } catch {
+    return viewFromRunArtifacts(undefined, undefined, navarreExampleContract);
+  }
 }

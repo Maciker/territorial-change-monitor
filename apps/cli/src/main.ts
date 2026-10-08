@@ -8,6 +8,7 @@ import { fixtureCatalog, loadExampleContract, runFixturePipeline } from "./fixtu
 import { writeDifferenceResult } from "./write-difference-result.js";
 import { writeGeotiff } from "./write-geotiff.js";
 import { writeQgisRecipe } from "./write-qgis-recipe.js";
+import { writeRunViewerArtifacts } from "./write-run-viewer-artifacts.js";
 
 const command = process.argv[2] ?? "demo";
 
@@ -40,9 +41,7 @@ if (command === "validate") {
     store: new FilesystemRunStore("outputs/fixture-run"),
     signal: AbortSignal.timeout(30_000),
   });
-  if (difference !== undefined) {
-    writeDifferenceResult("outputs/fixture-run", difference);
-  }
+  writeRunViewerArtifacts("outputs/fixture-run", difference);
   if (record.review) {
     writeFileSync(
       join("outputs/fixture-run", "report.txt"),
