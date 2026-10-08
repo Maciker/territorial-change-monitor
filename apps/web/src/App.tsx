@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { navarreExampleContract } from "../../../packages/domain/src/index.js";
-import { viewFromFixture, type RunView, type StoredRunFixture } from "../../../packages/application/src/index.js";
+import {
+  viewFromRunArtifacts,
+  type RunRecord,
+  type RunView,
+  type StoredDifferencePayload,
+} from "../../../packages/application/src/index.js";
 import { ChangeMap } from "./ChangeMap.js";
 import { PixelGrid } from "./PixelGrid.js";
 import { ReportPanel } from "./ReportPanel.js";
@@ -9,7 +14,7 @@ export function App() {
   const [view, setView] = useState<RunView>({ kind: "failed", message: "Loading run" });
 
   useEffect(() => {
-    void loadFixture().then(setView);
+    void loadRunArtifacts().then(setView);
   }, []);
 
   if (view.kind !== "ready") {
@@ -33,8 +38,18 @@ export function App() {
   );
 }
 
-async function loadFixture(): Promise<RunView> {
-  const response = await fetch("/run.fixture.json");
-  const fixture = (await response.json()) as StoredRunFixture;
-  return viewFromFixture(fixture, navarreExampleContract);
+async function loadRunArtifacts(): Promise<RunView> {
+  try {
+    const [runResponse, differenceResponse] = await Promise.all([
+      fetch("/run.json"),
+      fetch("/ndvi-difference.json"),
+    ]);
+    const record = runResponse.ok ? ((await runResponse.json()) as RunRecord) : undefined;
+    const difference = differenceResponse.ok
+      ? ((await differenceResponse.json()) as StoredDifferencePayload)
+      : undefined;
+    return viewFromRunArtifacts(record, difference, navarreExampleContract);
+  } catch {
+    return viewFromRunArtifacts(undefined, undefined, navarreExampleContract);
+  }
 }

@@ -8,6 +8,7 @@ import { fixtureCatalog, loadExampleContract, runFixturePipeline } from "./fixtu
 import { writeDifferenceResult } from "./write-difference-result.js";
 import { writeGeotiff } from "./write-geotiff.js";
 import { writeQgisRecipe } from "./write-qgis-recipe.js";
+import { writeRunViewerArtifacts } from "./write-run-viewer-artifacts.js";
 
 const command = process.argv[2] ?? "demo";
 
@@ -33,13 +34,14 @@ if (command === "validate") {
   console.log(`Candidates: ${review.candidateCount}; recipe: ${recipe}`);
 } else if (command === "run") {
   const contract = loadExampleContract();
-  const record = await executeChangeRun({
+  const { record, difference } = await executeChangeRun({
     contract,
     catalog: fixtureCatalog(),
     reader: new GeotiffRasterAdapter(),
     store: new FilesystemRunStore("outputs/fixture-run"),
     signal: AbortSignal.timeout(30_000),
   });
+  writeRunViewerArtifacts("outputs/fixture-run", difference);
   if (record.review) {
     writeFileSync(
       join("outputs/fixture-run", "report.txt"),
