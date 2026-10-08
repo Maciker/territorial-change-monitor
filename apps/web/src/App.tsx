@@ -9,6 +9,7 @@ import {
 import { ChangeMap } from "./ChangeMap.js";
 import { PixelGrid } from "./PixelGrid.js";
 import { ReportPanel } from "./ReportPanel.js";
+import { syntheticFixtureNote } from "./viewer-copy.js";
 
 export function App() {
   const [view, setView] = useState<RunView>({ kind: "failed", message: "Loading run" });
@@ -31,6 +32,7 @@ export function App() {
     <main>
       <ReportPanel report={view.report} metadata={view.metadata} />
       <ChangeMap bbox={view.bbox} />
+      <p className="fixture-note">{syntheticFixtureNote}</p>
       <PixelGrid title="Before NDVI" values={view.beforeNdvi} valid={view.valid} />
       <PixelGrid title="After NDVI" values={view.afterNdvi} valid={view.valid} />
       <PixelGrid title="Difference and validity mask" values={view.difference} valid={view.valid} />

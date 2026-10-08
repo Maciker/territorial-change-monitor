@@ -26,6 +26,27 @@ main {
   background: #f8d7da;
 }
 
+.map-panel {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.map-canvas {
+  min-height: 240px;
+}
+
+.map-caption,
+.fixture-note {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: #304030;
+}
+
+.fixture-note {
+  grid-column: 1 / -1;
+}
+
 .legend,
 .grid {
   display: flex;
