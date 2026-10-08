@@ -52,6 +52,44 @@ describe("The candidate change review", () => {
     expect(review.candidateCount).toBe(0);
   });
 
+  it("keeps the known-change candidate at threshold 0.2 and drops it when exploring 0.6", () => {
+    const knownChange = {
+      difference: new Float32Array([-0.5, 0, Number.NaN, 0]),
+      valid: new Uint8Array([1, 0, 0, 1]),
+      width: 2,
+      height: 2,
+      bbox: navarreExampleContract.aoi,
+      sign: "afterMinusBefore" as const,
+      minimumRegionPixels: 1,
+    };
+
+    const atRegistered = reviewCandidateChange({ ...knownChange, threshold: 0.2 });
+    const atExploration = reviewCandidateChange({ ...knownChange, threshold: 0.6 });
+
+    expect(atRegistered.candidateCount).toBe(1);
+    expect(atExploration.candidateCount).toBe(0);
+  });
+
+  it("never counts masked pixels with large absolute difference at any threshold", () => {
+    const onlyMaskedLargeDiff = {
+      difference: new Float32Array([-0.9, 0, 0, 0]),
+      valid: new Uint8Array([0, 1, 1, 1]),
+      width: 2,
+      height: 2,
+      bbox: navarreExampleContract.aoi,
+      sign: "afterMinusBefore" as const,
+      minimumRegionPixels: 1,
+    };
+
+    const lowThreshold = reviewCandidateChange({ ...onlyMaskedLargeDiff, threshold: 0.2 });
+    const highThreshold = reviewCandidateChange({ ...onlyMaskedLargeDiff, threshold: 0.01 });
+
+    expect(lowThreshold.candidateCount).toBe(0);
+    expect(lowThreshold.candidateAreaKm2).toBe(0);
+    expect(highThreshold.candidateCount).toBe(0);
+    expect(highThreshold.candidateAreaKm2).toBe(0);
+  });
+
   it("writes a relative-path QGIS recipe without Python", () => {
     const path = writeQgisRecipe("outputs/fixture-run");
 
