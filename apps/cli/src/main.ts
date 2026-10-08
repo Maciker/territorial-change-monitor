@@ -33,13 +33,16 @@ if (command === "validate") {
   console.log(`Candidates: ${review.candidateCount}; recipe: ${recipe}`);
 } else if (command === "run") {
   const contract = loadExampleContract();
-  const record = await executeChangeRun({
+  const { record, difference } = await executeChangeRun({
     contract,
     catalog: fixtureCatalog(),
     reader: new GeotiffRasterAdapter(),
     store: new FilesystemRunStore("outputs/fixture-run"),
     signal: AbortSignal.timeout(30_000),
   });
+  if (difference !== undefined) {
+    writeDifferenceResult("outputs/fixture-run", difference);
+  }
   if (record.review) {
     writeFileSync(
       join("outputs/fixture-run", "report.txt"),

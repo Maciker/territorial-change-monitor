@@ -12,7 +12,7 @@ describe("The fixture release rehearsal", () => {
   it("reproduces the Navarre example without paid services", async () => {
     const directory = mkdtempSync(join(tmpdir(), "rehearsal-"));
     const started = performance.now();
-    const record = await executeChangeRun({
+    const { record } = await executeChangeRun({
       contract: navarreExampleContract,
       catalog: FixtureStacAdapter.fromFile("test/fixtures/stac/navarre-items.json"),
       reader: new GeotiffRasterAdapter(),

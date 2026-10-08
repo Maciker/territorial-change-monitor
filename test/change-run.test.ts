@@ -7,6 +7,7 @@ import { executeChangeRun } from "../packages/application/src/index.js";
 import { FixtureStacAdapter } from "../apps/cli/src/fixture-stac-adapter.js";
 import { FilesystemRunStore } from "../apps/cli/src/filesystem-run-store.js";
 import { GeotiffRasterAdapter } from "../apps/cli/src/geotiff-raster-adapter.js";
+import { writeDifferenceResult } from "../apps/cli/src/write-difference-result.js";
 import { writeGeotiff } from "../apps/cli/src/write-geotiff.js";
 
 describe("The bounded change run", () => {
@@ -14,7 +15,7 @@ describe("The bounded change run", () => {
     const directory = mkdtempSync(join(tmpdir(), "change-run-"));
     const store = new FilesystemRunStore(directory);
 
-    const record = await executeChangeRun({
+    const { record } = await executeChangeRun({
       contract: navarreExampleContract,
       catalog: FixtureStacAdapter.fromFile("test/fixtures/stac/navarre-items.json"),
       reader: new GeotiffRasterAdapter(),
@@ -26,6 +27,33 @@ describe("The bounded change run", () => {
     expect(JSON.parse(readFileSync(join(directory, "run.json"), "utf8")).status).toBe("complete");
   });
 
+  it("exposes NDVI difference arrays for a complete computation so the viewer can persist them", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "change-run-"));
+    const store = new FilesystemRunStore(directory);
+
+    const result = await executeChangeRun({
+      contract: navarreExampleContract,
+      catalog: FixtureStacAdapter.fromFile("test/fixtures/stac/navarre-items.json"),
+      reader: new GeotiffRasterAdapter(),
+      store,
+    });
+    const path = writeDifferenceResult(directory, result.difference!);
+    const stored = JSON.parse(readFileSync(path, "utf8")) as {
+      validCoverage: number;
+      beforeNdvi: number[];
+      difference: Array<number | null>;
+      valid: number[];
+    };
+
+    expect(result.record.status).toBe("complete");
+    expect(result.difference).toBeDefined();
+    expect(result.difference?.validCoverage).toBe(result.record.validCoverage);
+    expect(result.difference?.valid.length).toBeGreaterThan(0);
+    expect(stored.validCoverage).toBe(result.record.validCoverage);
+    expect(stored.beforeNdvi).toHaveLength(result.difference!.beforeNdvi.length);
+    expect(stored.valid).toEqual(Array.from(result.difference!.valid));
+  });
+
   it("marks an interrupted run incomplete and resumes from cache", async () => {
     const directory = mkdtempSync(join(tmpdir(), "change-run-"));
     const store = new FilesystemRunStore(directory);
@@ -34,7 +62,7 @@ describe("The bounded change run", () => {
     const controller = new AbortController();
     controller.abort();
 
-    const cancelled = await executeChangeRun({
+    const { record: cancelled } = await executeChangeRun({
       contract: navarreExampleContract,
       catalog,
       reader,
@@ -44,7 +72,7 @@ describe("The bounded change run", () => {
     expect(cancelled.status).toBe("cancelled");
     expect(JSON.parse(readFileSync(join(directory, "run.json"), "utf8")).status).toBe("incomplete");
 
-    const resumed = await executeChangeRun({
+    const { record: resumed } = await executeChangeRun({
       contract: navarreExampleContract,
       catalog,
       reader,
@@ -60,7 +88,7 @@ describe("The bounded change run", () => {
     const reader = new GeotiffRasterAdapter();
     await executeChangeRun({ contract: navarreExampleContract, catalog, reader, store });
 
-    const changed = await executeChangeRun({
+    const { record: changed } = await executeChangeRun({
       contract: { ...navarreExampleContract, changeThreshold: 0.4 },
       catalog,
       reader,
@@ -88,10 +116,10 @@ describe("The bounded change run", () => {
     const reader = new GeotiffRasterAdapter();
     const input = { contract: navarreExampleContract, catalog, reader, store };
 
-    const first = await executeChangeRun(input);
-    const second = await executeChangeRun(input);
+    const { record: first } = await executeChangeRun(input);
+    const { record: second } = await executeChangeRun(input);
     writeGeotiff(join(rasters, "before-red.tif"), [1200, 1000, 0, 2000], 2, 2, navarreExampleContract.aoi, 32);
-    const third = await executeChangeRun(input);
+    const { record: third } = await executeChangeRun(input);
 
     expect(second.cacheHit).toBe(true);
     expect(second.sourceHashes).toEqual(first.sourceHashes);

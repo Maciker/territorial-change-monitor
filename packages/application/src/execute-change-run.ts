@@ -1,5 +1,5 @@
 import { DomainError, type RunContract, type ScenePair } from "../../domain/src/index.js";
-import { computeNdviDifference } from "./compute-ndvi-difference.js";
+import { computeNdviDifference, type NdviDifferenceResult } from "./compute-ndvi-difference.js";
 import type { RasterReader } from "./ports/raster-reader.js";
 import { readAlignedRasters } from "./read-aligned-rasters.js";
 import { reviewDifference } from "./review-change.js";
@@ -9,13 +9,18 @@ import type { RunRecord, RunStore } from "./ports/run-store.js";
 
 const softwareVersion = "0.1.0";
 
+export type ChangeRunResult = {
+  record: RunRecord;
+  difference?: NdviDifferenceResult;
+};
+
 export async function executeChangeRun(options: {
   contract: RunContract;
   catalog: StacCatalog;
   reader: RasterReader;
   store: RunStore;
   signal?: AbortSignal;
-}): Promise<RunRecord> {
+}): Promise<ChangeRunResult> {
   const record: RunRecord = {
     status: "incomplete",
     completedStages: [],
@@ -41,7 +46,7 @@ export async function executeChangeRun(options: {
     });
     const cached = options.store.read(record.cacheKey);
     if (cached?.status === "complete" && sameHashes(cached.sourceHashes, sourceHashes)) {
-      return { ...cached, cacheHit: true };
+      return { record: { ...cached, cacheHit: true } };
     }
     abortIfNeeded(options.signal, options.store, record);
     const rasters = await readAlignedRasters(pair, options.reader);
@@ -55,9 +60,9 @@ export async function executeChangeRun(options: {
     record.completedStages.push("review");
     record.status = "complete";
     options.store.writeAtomic(record);
-    return record;
+    return { record, difference };
   } catch (error) {
-    if (record.status === "cancelled") return record;
+    if (record.status === "cancelled") return { record };
     record.status = "failed";
     record.error = error instanceof Error ? error.message : "Run failed";
     options.store.writeIncomplete(record);
