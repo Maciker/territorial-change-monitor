@@ -8,5 +8,5 @@ export type { DifferenceProvenance, NdviDifferenceResult } from "./compute-ndvi-
 export { reviewDifference } from "./review-change.js";
 export { executeChangeRun } from "./execute-change-run.js";
 export type { RunRecord, RunStage, RunStore } from "./ports/run-store.js";
-export { createRunView, formatChangeReport, viewFromFixture } from "./change-report.js";
-export type { ReportInput, RunView, StoredRunFixture } from "./change-report.js";
+export { createRunView, formatChangeReport, viewFromFixture, viewFromRunArtifacts } from "./change-report.js";
+export type { ReportInput, RunView, StoredDifferencePayload, StoredRunFixture } from "./change-report.js";

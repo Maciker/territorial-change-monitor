@@ -1,4 +1,6 @@
 import type { BoundingBox, RunContract } from "../../domain/src/index.js";
+import type { DifferenceProvenance } from "./compute-ndvi-difference.js";
+import type { RunRecord } from "./ports/run-store.js";
 
 export type ReportInput = {
   contract: RunContract;
@@ -118,5 +120,60 @@ export function viewFromFixture(fixture: StoredRunFixture, contract: RunContract
     valid: fixture.valid,
     acquiredBefore: fixture.acquiredBefore,
     acquiredAfter: fixture.acquiredAfter,
+  });
+}
+
+export type StoredDifferencePayload = {
+  beforeNdvi: Array<number | null>;
+  afterNdvi: Array<number | null>;
+  difference: Array<number | null>;
+  valid: number[];
+  validCoverage: number;
+  provenance: DifferenceProvenance;
+};
+
+export function viewFromRunArtifacts(
+  record: RunRecord | undefined,
+  difference: StoredDifferencePayload | undefined,
+  contract: RunContract,
+): RunView {
+  if (record === undefined) {
+    return createRunView({
+      status: "failed",
+      error: "Missing or incomplete run artifacts under outputs/fixture-run.",
+    });
+  }
+  if (record.status === "incomplete" || record.status === "cancelled") {
+    return createRunView({
+      status: "failed",
+      error: "The run is incomplete and cannot be shown as a finished result.",
+    });
+  }
+  if (record.status === "failed") {
+    return record.error === undefined
+      ? createRunView({ status: "failed" })
+      : createRunView({ status: "failed", error: record.error });
+  }
+  if (difference === undefined) {
+    return createRunView({
+      status: "failed",
+      error: "Missing or incomplete run artifacts under outputs/fixture-run.",
+    });
+  }
+  return createRunView({
+    status: "complete",
+    contract,
+    beforeId: record.beforeId ?? difference.provenance.beforeId,
+    afterId: record.afterId ?? difference.provenance.afterId,
+    candidateCount: record.review?.candidateCount ?? 0,
+    validCoverage: difference.validCoverage,
+    threshold: record.review?.threshold ?? difference.provenance.changeThreshold,
+    bbox: contract.aoi,
+    beforeNdvi: difference.beforeNdvi.map((value) => value ?? Number.NaN),
+    afterNdvi: difference.afterNdvi.map((value) => value ?? Number.NaN),
+    difference: difference.difference.map((value) => value ?? Number.NaN),
+    valid: difference.valid,
+    acquiredBefore: record.acquiredBefore ?? "",
+    acquiredAfter: record.acquiredAfter ?? "",
   });
 }
