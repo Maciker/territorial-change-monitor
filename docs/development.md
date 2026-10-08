@@ -28,4 +28,6 @@ pnpm web           # local MapLibre report
 
 `pnpm change-run` writes atomically to `outputs/fixture-run/` and keeps incomplete runs visible. Delete that directory to clean up. Disk budget is 10 MB. Raster budget is 10,000 pixels and 1 MB per file. See [run lifecycle](run-lifecycle.md) and [fixtures](fixtures.md).
 
+`pnpm web` uses a self-contained MapLibre style (background + local AOI GeoJSON only; no remote tiles, glyphs, or sprites). After `pnpm change-run`, the AOI map still loads when external network access is blocked.
+
 Live STAC calls are optional and are not part of CI. The HTTP adapter has a 4s timeout and two retries; CI uses recorded fixtures only.
