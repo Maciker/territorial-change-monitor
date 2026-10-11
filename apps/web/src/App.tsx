@@ -12,6 +12,7 @@ import { ChangeMap } from "./ChangeMap.js";
 import { ExplorationPanel } from "./ExplorationPanel.js";
 import { PixelGrid } from "./PixelGrid.js";
 import { ReportPanel } from "./ReportPanel.js";
+import { syntheticFixtureNote } from "./viewer-copy.js";
 
 type ReadyView = Extract<RunView, { kind: "ready" }>;
 
@@ -72,6 +73,7 @@ function ReadyRunView(props: { view: ReadyView }) {
         candidateFlags={scenario.candidateFlags}
       />
       <ChangeMap bbox={props.view.bbox} />
+      <p className="fixture-note">{syntheticFixtureNote}</p>
       <PixelGrid title="Before NDVI" values={props.view.beforeNdvi} valid={props.view.valid} />
       <PixelGrid title="After NDVI" values={props.view.afterNdvi} valid={props.view.valid} />
       <PixelGrid title="Difference and validity mask" values={props.view.difference} valid={props.view.valid} />
