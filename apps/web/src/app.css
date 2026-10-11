@@ -61,3 +61,36 @@ main {
   place-items: center;
   color: #fff;
 }
+
+.exploration,
+.candidate-grid {
+  grid-column: 1 / -1;
+}
+
+.exploration-label,
+.report-note {
+  font-size: 0.95rem;
+}
+
+.exploration label {
+  display: block;
+  margin-top: 0.5rem;
+}
+
+.exploration input[type="number"] {
+  margin-top: 0.25rem;
+  padding: 0.35rem 0.5rem;
+  max-width: 8rem;
+}
+
+.candidate-cell {
+  width: auto;
+  min-width: 10rem;
+  height: auto;
+  min-height: 4rem;
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  text-align: left;
+  color: #102010;
+  background: #e8efe4;
+}

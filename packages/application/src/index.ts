@@ -11,3 +11,5 @@ export type { ChangeRunResult } from "./execute-change-run.js";
 export type { RunRecord, RunStage, RunStore } from "./ports/run-store.js";
 export { createRunView, formatChangeReport, viewFromFixture, viewFromRunArtifacts } from "./change-report.js";
 export type { ReportInput, RunView, StoredDifferencePayload, StoredRunFixture } from "./change-report.js";
+export { buildExplorationReading, exploreCandidateScenario } from "./explore-threshold.js";
+export type { ExploreCandidateInput, ExplorationReading } from "./explore-threshold.js";

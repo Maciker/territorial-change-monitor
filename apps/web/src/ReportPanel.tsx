@@ -14,6 +14,7 @@ export function ReportPanel(props: Props) {
   return (
     <article>
       <h1>Change report</h1>
+      <p className="report-note">Registered run evidence below; exploration does not rewrite this report.</p>
       <pre tabIndex={0}>{props.report}</pre>
       <p>
         Sources {props.metadata.beforeId} ({props.metadata.acquiredBefore}) and {props.metadata.afterId} (
