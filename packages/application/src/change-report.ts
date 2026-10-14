@@ -7,6 +7,8 @@ export type ReportInput = {
   beforeId: string;
   afterId: string;
   candidateCount: number;
+  gainCount?: number;
+  lossCount?: number;
   validCoverage: number;
   threshold: number;
   acquiredBefore: string;
@@ -37,10 +39,15 @@ export type RunView =
 export function formatChangeReport(input: ReportInput): string {
   return [
     `Question: ${input.contract.question}`,
-    "Method: Sentinel-2 L2A NDVI, after minus before, on the shared validity mask.",
-    `Evidence: ${input.beforeId} acquired ${input.acquiredBefore} compared with ${input.afterId} acquired ${input.acquiredAfter}; ${input.candidateCount} candidate pixels at threshold ${input.threshold}; valid-pixel coverage ${input.validCoverage}.`,
+    `Method: Sentinel-2 L2A NDVI difference (after - before) on the shared validity mask; a pixel is a candidate when |after - before| >= ${input.threshold}, so gains and losses both count.`,
+    `Evidence: ${input.beforeId} acquired ${input.acquiredBefore} compared with ${input.afterId} acquired ${input.acquiredAfter}; ${input.candidateCount} candidate pixels${directionText(input)} at threshold ${input.threshold}; valid-pixel coverage ${input.validCoverage}.`,
     `Limitations: ${input.contract.limitations.join(" ")} Spectral change is not evidence of cause.`,
   ].join("\n");
+}
+
+function directionText(input: ReportInput): string {
+  if (input.gainCount === undefined || input.lossCount === undefined) return "";
+  return ` (${input.gainCount} gain, ${input.lossCount} loss)`;
 }
 
 export function createRunView(
@@ -166,6 +173,7 @@ export function viewFromRunArtifacts(
     beforeId: record.beforeId ?? difference.provenance.beforeId,
     afterId: record.afterId ?? difference.provenance.afterId,
     candidateCount: record.review?.candidateCount ?? 0,
+    ...(record.review ? { gainCount: record.review.gainCount, lossCount: record.review.lossCount } : {}),
     validCoverage: difference.validCoverage,
     threshold: record.review?.threshold ?? difference.provenance.changeThreshold,
     bbox: contract.aoi,

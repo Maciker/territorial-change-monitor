@@ -5,7 +5,7 @@ import { formatKernelDemo } from "./demo.js";
 import { FilesystemRunStore } from "./filesystem-run-store.js";
 import { GeotiffRasterAdapter } from "./geotiff-raster-adapter.js";
 import { fixtureCatalog, loadExampleContract, runFixturePipeline } from "./fixture-pipeline.js";
-import { writeDifferenceResult } from "./write-difference-result.js";
+import { writeDifferenceGeotiff, writeDifferenceResult } from "./write-difference-result.js";
 import { writeGeotiff } from "./write-geotiff.js";
 import { writeQgisRecipe } from "./write-qgis-recipe.js";
 import { writeRunViewerArtifacts } from "./write-run-viewer-artifacts.js";
@@ -30,7 +30,8 @@ if (command === "validate") {
   const pipeline = await runFixturePipeline();
   const review = reviewDifference(pipeline.contract, pipeline.rasters, pipeline.result);
   writeDifferenceResult("outputs/fixture-run", pipeline.result);
-  const recipe = writeQgisRecipe("outputs/fixture-run");
+  writeDifferenceGeotiff("outputs/fixture-run", pipeline.result);
+  const recipe = writeQgisRecipe("outputs/fixture-run", pipeline.contract);
   console.log(`Candidates: ${review.candidateCount}; recipe: ${recipe}`);
 } else if (command === "run") {
   const contract = loadExampleContract();
@@ -42,6 +43,8 @@ if (command === "validate") {
     signal: AbortSignal.timeout(30_000),
   });
   writeRunViewerArtifacts("outputs/fixture-run", difference);
+  if (difference) writeDifferenceGeotiff("outputs/fixture-run", difference);
+  writeQgisRecipe("outputs/fixture-run", contract);
   if (record.review) {
     writeFileSync(
       join("outputs/fixture-run", "report.txt"),
@@ -50,6 +53,8 @@ if (command === "validate") {
         beforeId: record.beforeId ?? "unknown",
         afterId: record.afterId ?? "unknown",
         candidateCount: record.review.candidateCount,
+        gainCount: record.review.gainCount,
+        lossCount: record.review.lossCount,
         validCoverage: record.validCoverage ?? 0,
         threshold: record.review.threshold,
         acquiredBefore: record.acquiredBefore ?? "",

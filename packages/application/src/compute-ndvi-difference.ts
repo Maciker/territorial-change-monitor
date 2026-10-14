@@ -1,4 +1,10 @@
-import { combineMasks, maskedNormalizedDifference, type RunContract, type ScenePair } from "../../domain/src/index.js";
+import {
+  combineMasks,
+  maskedNormalizedDifference,
+  type BoundingBox,
+  type RunContract,
+  type ScenePair,
+} from "../../domain/src/index.js";
 import type { AlignedRasterPair } from "./read-aligned-rasters.js";
 
 export type DifferenceProvenance = {
@@ -12,6 +18,9 @@ export type DifferenceProvenance = {
 };
 
 export type NdviDifferenceResult = {
+  width: number;
+  height: number;
+  bbox: BoundingBox;
   beforeNdvi: Float32Array;
   afterNdvi: Float32Array;
   difference: Float32Array;
@@ -32,6 +41,9 @@ export function computeNdviDifference(
     valid[index] === 1 ? Math.fround(value - (beforeNdvi[index] ?? Number.NaN)) : Number.NaN,
   );
   return {
+    width: rasters.before.red.width,
+    height: rasters.before.red.height,
+    bbox: rasters.before.red.bbox,
     beforeNdvi,
     afterNdvi,
     difference,

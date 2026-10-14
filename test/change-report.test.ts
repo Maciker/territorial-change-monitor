@@ -25,6 +25,25 @@ describe("The change report", () => {
     expect(report).not.toMatch(/caused|deforestation|illegal/i);
   });
 
+  it("states that the threshold applies to gains and losses and splits the candidates", () => {
+    const report = formatChangeReport({
+      contract: navarreExampleContract,
+      beforeId: "S2A_20240612_NAVARRE",
+      afterId: "S2A_20250611_NAVARRE",
+      candidateCount: 1,
+      gainCount: 0,
+      lossCount: 1,
+      validCoverage: 0.5,
+      threshold: 0.2,
+      acquiredBefore: "2024-06-12T10:55:00Z",
+      acquiredAfter: "2025-06-11T10:55:00Z",
+    });
+
+    expect(report).toContain("|after - before| >= 0.2");
+    expect(report).toContain("gains and losses");
+    expect(report).toContain("0 gain, 1 loss");
+  });
+
   it("exposes failed and insufficient-data views", () => {
     expect(createRunView({ status: "failed", error: "disk budget" }).kind).toBe("failed");
     const fixture = JSON.parse(readFileSync("apps/web/public/run.fixture.json", "utf8")) as { validCoverage: number };

@@ -124,6 +124,8 @@ function completeRecord(): RunRecord {
       minimumRegionPixels: 1,
       candidateFlags: Uint8Array.from([1, 0]),
       candidateCount: 1,
+      gainCount: 0,
+      lossCount: 1,
       candidateAreaKm2: 0.01,
       limitations: ["Spectral change is not evidence of cause."],
     },

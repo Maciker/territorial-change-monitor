@@ -62,7 +62,7 @@ function readEpsg(keys: { GeographicTypeGeoKey?: number; ProjectedCSTypeGeoKey?:
 }
 
 function resolveNoData(recorded: number | undefined, declared: number | undefined, path: string): number | undefined {
-  if (recorded !== undefined && declared !== undefined && recorded !== declared) {
+  if (recorded !== undefined && declared !== undefined && !Object.is(recorded, declared)) {
     throw DomainError.createValidation(`NoData mismatch for ${path}: file records ${recorded}, catalog declares ${declared}`);
   }
   return recorded ?? declared;
