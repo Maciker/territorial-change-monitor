@@ -3,6 +3,7 @@ import { DomainError } from "./domain-error.js";
 const supportedAoiCrs = "EPSG:4326";
 const maxAoiAreaKm2 = 25;
 const earthRadiusKm = 6371;
+const maxNdviDifference = 2;
 
 export type BoundingBox = {
   west: number;
@@ -92,8 +93,11 @@ export function createRunContract(input: RunContractInput): RunContract {
   if (beforeStart > beforeEnd || afterStart > afterEnd || beforeEnd >= afterStart) {
     throw DomainError.createValidation("Observation windows are inverted or overlapping backwards");
   }
-  if (input.maxCloudCoverPercent < 0 || input.maxCloudCoverPercent > 100) {
+  if (!Number.isFinite(input.maxCloudCoverPercent) || input.maxCloudCoverPercent < 0 || input.maxCloudCoverPercent > 100) {
     throw DomainError.createValidation("Cloud cover percent is outside 0-100");
+  }
+  if (!Number.isFinite(input.changeThreshold) || input.changeThreshold <= 0 || input.changeThreshold > maxNdviDifference) {
+    throw DomainError.createValidation(`Change threshold must be greater than 0 and at most ${maxNdviDifference}`);
   }
   if (input.changeSign !== "afterMinusBefore") {
     throw DomainError.createValidation("Unsupported change sign");
