@@ -1,6 +1,6 @@
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { executeChangeRun, formatChangeReport, reviewDifference } from "../../../packages/application/src/index.js";
+import { executeChangeRun, formatChangeReport, reportProvenance, reviewDifference } from "../../../packages/application/src/index.js";
 import { formatKernelDemo } from "./demo.js";
 import { FilesystemRunStore } from "./filesystem-run-store.js";
 import { GeotiffRasterAdapter } from "./geotiff-raster-adapter.js";
@@ -59,6 +59,7 @@ if (command === "validate") {
         threshold: record.review.threshold,
         acquiredBefore: record.acquiredBefore ?? "",
         acquiredAfter: record.acquiredAfter ?? "",
+        ...reportProvenance(record),
       }),
     );
   }

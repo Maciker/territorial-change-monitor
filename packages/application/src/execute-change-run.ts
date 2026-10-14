@@ -6,8 +6,7 @@ import { reviewDifference } from "./review-change.js";
 import { selectScenes } from "./select-scenes.js";
 import type { StacCatalog } from "./ports/stac-catalog.js";
 import type { RunRecord, RunStore } from "./ports/run-store.js";
-
-const softwareVersion = "0.1.0";
+import { softwareVersion } from "./version.js";
 
 export type ChangeRunResult = {
   record: RunRecord;
@@ -27,6 +26,7 @@ export async function executeChangeRun(options: {
     cacheKey: options.store.cacheKey({ contract: options.contract, version: softwareVersion }),
     cacheHit: false,
     contract: options.contract,
+    softwareVersion,
   };
   try {
     abortIfNeeded(options.signal, options.store, record);
@@ -38,6 +38,8 @@ export async function executeChangeRun(options: {
     record.afterId = pair.after.id;
     record.acquiredBefore = pair.before.acquiredAt;
     record.acquiredAfter = pair.after.acquiredAt;
+    record.processingLevelBefore = pair.before.processingLevel;
+    record.processingLevelAfter = pair.after.processingLevel;
     const sourceHashes = await digestPair(pair, options.reader);
     record.sourceHashes = sourceHashes;
     record.cacheKey = options.store.cacheKey({

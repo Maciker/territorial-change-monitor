@@ -162,6 +162,8 @@ function differencePayload(): StoredDifferencePayload {
       afterId: "S2A_20250611_NAVARRE",
       beforeRedHash: "a",
       afterRedHash: "b",
+      beforeNirHash: "c",
+      afterNirHash: "d",
       units: "NDVI difference",
       softwareVersion: "0.1.0",
       changeThreshold: 0.2,

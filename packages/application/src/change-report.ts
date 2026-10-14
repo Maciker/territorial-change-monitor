@@ -1,6 +1,7 @@
-import type { BoundingBox, ChangeSign, RunContract } from "../../domain/src/index.js";
+import { excludedSclClasses, type BoundingBox, type ChangeSign, type RunContract } from "../../domain/src/index.js";
 import type { DifferenceProvenance } from "./compute-ndvi-difference.js";
 import type { RunRecord } from "./ports/run-store.js";
+import { stacSearchBounds } from "./select-scenes.js";
 
 export type ReportInput = {
   contract: RunContract;
@@ -13,7 +14,34 @@ export type ReportInput = {
   threshold: number;
   acquiredBefore: string;
   acquiredAfter: string;
+  provenance?: ReportProvenance;
 };
+
+export type ReportProvenance = {
+  collection: string;
+  processingLevelBefore: string;
+  processingLevelAfter: string;
+  sourceHashes: Record<string, string>;
+  softwareVersion: string;
+};
+
+/** Report provenance from a run record, empty when the record predates provenance fields. */
+export function reportProvenance(record: RunRecord): { provenance?: ReportProvenance } {
+  if (!record.sourceHashes || !record.processingLevelBefore || !record.processingLevelAfter || !record.softwareVersion) {
+    return {};
+  }
+  return {
+    provenance: {
+      collection: stacSearchBounds.collection,
+      processingLevelBefore: record.processingLevelBefore,
+      processingLevelAfter: record.processingLevelAfter,
+      sourceHashes: record.sourceHashes,
+      softwareVersion: record.softwareVersion,
+    },
+  };
+}
+
+const causalLimitation = "Spectral change is not evidence of cause.";
 
 export type RunView =
   | {
@@ -43,8 +71,30 @@ export function formatChangeReport(input: ReportInput): string {
     `Question: ${input.contract.question}`,
     `Method: Sentinel-2 L2A NDVI difference (after - before) on the shared validity mask; a pixel is a candidate when |after - before| >= ${input.threshold}, so gains and losses both count.`,
     `Evidence: ${input.beforeId} acquired ${input.acquiredBefore} compared with ${input.afterId} acquired ${input.acquiredAfter}; ${input.candidateCount} candidate pixels${directionText(input)} at threshold ${input.threshold}; valid-pixel coverage ${input.validCoverage}.`,
-    `Limitations: ${input.contract.limitations.join(" ")} Spectral change is not evidence of cause.`,
+    ...provenanceLines(input),
+    `Limitations: ${limitationsText(input.contract.limitations)}`,
   ].join("\n");
+}
+
+function provenanceLines(input: ReportInput): string[] {
+  const provenance = input.provenance;
+  const lines = [
+    `Masking: NoData and Sentinel-2 SCL classes ${excludedSclClasses.join(", ")} are excluded; no resampling or reprojection is applied.`,
+  ];
+  if (!provenance) return lines;
+  const hashes = Object.entries(provenance.sourceHashes)
+    .map(([source, hash]) => `${source} sha256:${hash}`)
+    .join("; ");
+  return [
+    `Collection: ${provenance.collection}; processing level ${provenance.processingLevelBefore} / ${provenance.processingLevelAfter}; license ${input.contract.sourceLicense}; software ${provenance.softwareVersion}.`,
+    ...lines,
+    `Sources: ${hashes}.`,
+  ];
+}
+
+function limitationsText(limitations: readonly string[]): string {
+  const all = limitations.includes(causalLimitation) ? limitations : [...limitations, causalLimitation];
+  return all.join(" ");
 }
 
 function directionText(input: ReportInput): string {
@@ -179,6 +229,7 @@ export function viewFromRunArtifacts(
     afterId: record.afterId ?? difference.provenance.afterId,
     candidateCount: record.review?.candidateCount ?? 0,
     ...(record.review ? { gainCount: record.review.gainCount, lossCount: record.review.lossCount } : {}),
+    ...reportProvenance(record),
     validCoverage: difference.validCoverage,
     threshold: record.review?.threshold ?? difference.provenance.changeThreshold,
     bbox: effectiveContract.aoi,

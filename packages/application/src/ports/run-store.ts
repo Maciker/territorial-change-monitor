@@ -16,6 +16,9 @@ export type RunRecord = {
   afterId?: string;
   acquiredBefore?: string;
   acquiredAfter?: string;
+  processingLevelBefore?: string;
+  processingLevelAfter?: string;
+  softwareVersion?: string;
   sourceHashes?: Record<string, string>;
 };
 

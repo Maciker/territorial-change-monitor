@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { maskedNormalizedDifference } from "../packages/domain/src/index.js";
 import { navarreExampleContract } from "../packages/domain/src/index.js";
-import { computeNdviDifference, readAlignedRasters, selectScenes } from "../packages/application/src/index.js";
+import { readFileSync } from "node:fs";
+import { computeNdviDifference, readAlignedRasters, selectScenes, softwareVersion } from "../packages/application/src/index.js";
 import { FixtureStacAdapter } from "../apps/cli/src/fixture-stac-adapter.js";
 import { GeotiffRasterAdapter } from "../apps/cli/src/geotiff-raster-adapter.js";
 
@@ -30,6 +31,14 @@ describe("The masked NDVI difference", () => {
     expect(result.validCoverage).toBeCloseTo(0.5);
     expect(result.provenance.beforeRedHash).toBe(rasters.before.red.hash);
     expect(result.provenance.units).toBe(navarreExampleContract.units);
-    expect(result.provenance.softwareVersion).toBe("0.1.0");
+    expect(result.provenance.softwareVersion).toBe(softwareVersion);
+    expect(result.provenance.beforeNirHash).toBe(rasters.before.nir.hash);
+    expect(result.provenance.afterNirHash).toBe(rasters.after.nir.hash);
+  });
+
+  it("derives the software version from the package manifest", () => {
+    const manifest = JSON.parse(readFileSync("package.json", "utf8")) as { version: string };
+
+    expect(softwareVersion).toBe(manifest.version);
   });
 });

@@ -6,12 +6,15 @@ import {
   type ScenePair,
 } from "../../domain/src/index.js";
 import type { AlignedRasterPair } from "./read-aligned-rasters.js";
+import { softwareVersion } from "./version.js";
 
 export type DifferenceProvenance = {
   beforeId: string;
   afterId: string;
   beforeRedHash: string;
   afterRedHash: string;
+  beforeNirHash: string;
+  afterNirHash: string;
   units: string;
   softwareVersion: string;
   changeThreshold: number;
@@ -54,8 +57,10 @@ export function computeNdviDifference(
       afterId: pair.after.id,
       beforeRedHash: rasters.before.red.hash,
       afterRedHash: rasters.after.red.hash,
+      beforeNirHash: rasters.before.nir.hash,
+      afterNirHash: rasters.after.nir.hash,
       units: contract.units,
-      softwareVersion: "0.1.0",
+      softwareVersion,
       changeThreshold: contract.changeThreshold,
     },
   };

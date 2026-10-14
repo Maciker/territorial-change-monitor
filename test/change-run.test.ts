@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { navarreExampleContract } from "../packages/domain/src/index.js";
-import { executeChangeRun } from "../packages/application/src/index.js";
+import { executeChangeRun, softwareVersion } from "../packages/application/src/index.js";
 import { FixtureStacAdapter } from "../apps/cli/src/fixture-stac-adapter.js";
 import { FilesystemRunStore } from "../apps/cli/src/filesystem-run-store.js";
 import { GeotiffRasterAdapter } from "../apps/cli/src/geotiff-raster-adapter.js";
@@ -40,6 +40,7 @@ describe("The bounded change run", () => {
 
     const stored = JSON.parse(readFileSync(join(directory, "run.json"), "utf8")) as { contract: typeof contract };
     expect(stored.contract).toEqual(contract);
+    expect(stored).toMatchObject({ processingLevelBefore: "L2A", processingLevelAfter: "L2A", softwareVersion });
   });
 
   it("stores NDVI difference beside the finished run record for the local viewer", async () => {
