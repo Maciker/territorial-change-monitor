@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { applyScaleOffset, assertPixelBudget, assertSameGrid, navarreExampleContract, validityMask } from "../packages/domain/src/index.js";
+import {
+  applyScaleOffset,
+  assertPixelBudget,
+  assertSameGrid,
+  navarreExampleContract,
+  rawValidData,
+  validityMask,
+} from "../packages/domain/src/index.js";
 import type { RasterBand } from "../packages/domain/src/index.js";
 
 function band(values: number[], overrides: Partial<RasterBand> = {}): RasterBand {
@@ -37,6 +44,10 @@ describe("The raster grid", () => {
     const optical = band([0, 0.1, 0.2, 0.3], { noData: 0, validData: Uint8Array.from([1, 1, 1, 1]) });
 
     expect(Array.from(validityMask(optical))).toEqual([1, 1, 1, 1]);
+  });
+
+  it("matches a fractional NoData code against float32 samples", () => {
+    expect(Array.from(rawValidData(new Float32Array([-9999.9, 1]), -9999.9))).toEqual([0, 1]);
   });
 
   it("rejects a CRS or grid mismatch instead of resampling", () => {

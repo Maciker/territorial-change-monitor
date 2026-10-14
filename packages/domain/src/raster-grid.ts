@@ -29,7 +29,9 @@ export function applyScaleOffset(raw: Float32Array, scale: number, offset: numbe
 export const excludedSclClasses: readonly number[] = [...invalidScl].sort((left, right) => left - right);
 
 export function rawValidData(raw: Float32Array, noData: number | undefined): Uint8Array {
-  return Uint8Array.from(raw, (value) => (Number.isNaN(value) || (noData !== undefined && value === noData) ? 0 : 1));
+  // Samples are float32, so compare against the float32 rounding of the declared code.
+  const sampleNoData = noData === undefined ? undefined : Math.fround(noData);
+  return Uint8Array.from(raw, (value) => (Number.isNaN(value) || (sampleNoData !== undefined && value === sampleNoData) ? 0 : 1));
 }
 
 export function validityMask(optical: RasterBand, scl?: RasterBand): Uint8Array {
