@@ -9,8 +9,9 @@ export function loadExampleContract(): RunContract {
   return loadRunContract("config/run.example.yml", "config/aoi.example.geojson");
 }
 
-export function fixtureCatalog(): FixtureStacAdapter {
-  return FixtureStacAdapter.fromFile("test/fixtures/stac/navarre-items.json");
+/** Recorded catalog for the synthetic 20x20 demo scene; see data/fixtures/navarre-demo/README.md. */
+export function demoCatalog(): FixtureStacAdapter {
+  return FixtureStacAdapter.fromFile("data/fixtures/navarre-demo/items.json");
 }
 
 export async function runFixturePipeline(): Promise<{
@@ -20,7 +21,7 @@ export async function runFixturePipeline(): Promise<{
   result: NdviDifferenceResult;
 }> {
   const contract = loadExampleContract();
-  const pair = await selectScenes(contract, fixtureCatalog());
+  const pair = await selectScenes(contract, demoCatalog());
   const rasters = await readAlignedRasters(pair, new GeotiffRasterAdapter());
   const result = computeNdviDifference(contract, pair, rasters);
   return { contract, pair, rasters, result };

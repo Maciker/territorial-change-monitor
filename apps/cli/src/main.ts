@@ -4,7 +4,7 @@ import { executeChangeRun, formatChangeReport, reportProvenance, reviewDifferenc
 import { formatKernelDemo } from "./demo.js";
 import { FilesystemRunStore } from "./filesystem-run-store.js";
 import { GeotiffRasterAdapter } from "./geotiff-raster-adapter.js";
-import { fixtureCatalog, loadExampleContract, runFixturePipeline } from "./fixture-pipeline.js";
+import { demoCatalog, loadExampleContract, runFixturePipeline } from "./fixture-pipeline.js";
 import { writeDifferenceGeotiff, writeDifferenceResult } from "./write-difference-result.js";
 import { writeQgisRecipe } from "./write-qgis-recipe.js";
 import { writeRunViewerArtifacts } from "./write-run-viewer-artifacts.js";
@@ -36,7 +36,7 @@ if (command === "validate") {
   const contract = loadExampleContract();
   const { record, difference } = await executeChangeRun({
     contract,
-    catalog: fixtureCatalog(),
+    catalog: demoCatalog(),
     reader: new GeotiffRasterAdapter(),
     store: new FilesystemRunStore("outputs/fixture-run"),
     signal: AbortSignal.timeout(30_000),

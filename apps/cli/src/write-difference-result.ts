@@ -9,6 +9,8 @@ export function writeDifferenceResult(directory: string, result: NdviDifferenceR
   writeFileSync(
     path,
     JSON.stringify({
+      width: result.width,
+      height: result.height,
       beforeNdvi: Array.from(result.beforeNdvi),
       afterNdvi: Array.from(result.afterNdvi),
       difference: Array.from(result.difference),
