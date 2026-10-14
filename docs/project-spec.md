@@ -4,7 +4,7 @@
 Compare a bounded pair of Sentinel-2 observations, mask invalid pixels and report candidate spectral change with provenance.
 
 ## Foundation delivered
-The TypeScript fixture MVP is implemented: Navarre run contract, STAC selection, raster I/O and masks, NDVI difference, thresholded review, resumable CLI, and a local map/report. Live STAC downloads remain optional and are excluded from CI.
+The TypeScript fixture MVP is implemented on synthetic data: Navarre run contract, STAC selection from a recorded catalog, raster I/O with NoData and SCL masks, NDVI difference, thresholded review, a CLI with hash-keyed caching of completed runs, a difference GeoTIFF and a local map/report. There is no live STAC or real-raster path yet: the HTTP adapter is not wired into the CLI and real Sentinel-2 grids are rejected rather than reprojected.
 
 ## Constraints
 - TypeScript application code, Node 22/24, pnpm workspaces.

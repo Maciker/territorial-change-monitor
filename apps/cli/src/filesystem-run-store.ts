@@ -19,6 +19,7 @@ export class FilesystemRunStore implements RunStore {
     try {
       const record = JSON.parse(readFileSync(join(this.directory, "run.json"), "utf8")) as RunRecord;
       if (record.cacheKey !== cacheKey || record.status !== "complete") return undefined;
+      if (record.review) record.review = { ...record.review, candidateFlags: Uint8Array.from(record.review.candidateFlags) };
       return record;
     } catch {
       return undefined;
@@ -29,7 +30,7 @@ export class FilesystemRunStore implements RunStore {
     this.assertDiskBudget();
     const target = join(this.directory, "run.json");
     const temporary = `${target}.tmp`;
-    writeFileSync(temporary, JSON.stringify(record, null, 2));
+    writeFileSync(temporary, JSON.stringify(record, typedArraysAsLists, 2));
     renameSync(temporary, target);
   }
 
@@ -43,4 +44,8 @@ export class FilesystemRunStore implements RunStore {
       throw DomainError.createValidation("Run directory exceeds the disk budget");
     }
   }
+}
+
+function typedArraysAsLists(_key: string, value: unknown): unknown {
+  return ArrayBuffer.isView(value) ? Array.from(value as Uint8Array) : value;
 }

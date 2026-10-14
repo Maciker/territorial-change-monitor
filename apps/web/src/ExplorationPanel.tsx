@@ -3,6 +3,7 @@ interface Props {
   explorationThreshold: number;
   candidateCount: number;
   candidateAreaKm2: number;
+  gridLabel: string;
   onExplorationThresholdChange: (value: number) => void;
 }
 
@@ -11,7 +12,8 @@ export function ExplorationPanel(props: Props) {
     <section className="exploration" aria-labelledby="exploration-heading">
       <h2 id="exploration-heading">Threshold exploration</h2>
       <p className="exploration-label">
-        Synthetic 2×2 fixture. Candidate results are not a cause claim.
+        Synthetic {props.gridLabel} fixture. Candidates use |after − before| ≥ threshold and are not a cause
+        claim.
       </p>
       <p>
         Original registered threshold: {props.originalThreshold}

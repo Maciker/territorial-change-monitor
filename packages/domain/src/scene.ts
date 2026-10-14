@@ -10,6 +10,8 @@ export type SceneBand = {
   href: string;
   scale: number;
   offset: number;
+  /** NoData code in raw source units, as declared by the catalog. */
+  noData?: number;
 };
 
 export type CatalogItem = {

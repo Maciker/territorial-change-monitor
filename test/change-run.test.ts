@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { navarreExampleContract } from "../packages/domain/src/index.js";
-import { executeChangeRun } from "../packages/application/src/index.js";
+import { executeChangeRun, softwareVersion } from "../packages/application/src/index.js";
 import { FixtureStacAdapter } from "../apps/cli/src/fixture-stac-adapter.js";
 import { FilesystemRunStore } from "../apps/cli/src/filesystem-run-store.js";
 import { GeotiffRasterAdapter } from "../apps/cli/src/geotiff-raster-adapter.js";
@@ -24,7 +24,38 @@ describe("The bounded change run", () => {
 
     expect(record.status).toBe("complete");
     expect(record.completedStages).toEqual(["validate", "select", "read", "difference", "review"]);
+    expect(record.coverageVerdict).toBe("sufficient");
     expect(JSON.parse(readFileSync(join(directory, "run.json"), "utf8")).status).toBe("complete");
+  });
+
+  it("stores candidate flags as a plain array", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "change-run-"));
+
+    const { record } = await executeChangeRun({
+      contract: navarreExampleContract,
+      catalog: FixtureStacAdapter.fromFile("test/fixtures/stac/navarre-items.json"),
+      reader: new GeotiffRasterAdapter(),
+      store: new FilesystemRunStore(directory),
+    });
+
+    const stored = JSON.parse(readFileSync(join(directory, "run.json"), "utf8")) as { review: { candidateFlags: unknown } };
+    expect(stored.review.candidateFlags).toEqual(Array.from(record.review!.candidateFlags));
+  });
+
+  it("records the effective contract with the run", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "change-run-"));
+    const contract = { ...navarreExampleContract, question: "Which pixels changed in this rehearsal?" };
+
+    await executeChangeRun({
+      contract,
+      catalog: FixtureStacAdapter.fromFile("test/fixtures/stac/navarre-items.json"),
+      reader: new GeotiffRasterAdapter(),
+      store: new FilesystemRunStore(directory),
+    });
+
+    const stored = JSON.parse(readFileSync(join(directory, "run.json"), "utf8")) as { contract: typeof contract };
+    expect(stored.contract).toEqual(contract);
+    expect(stored).toMatchObject({ processingLevelBefore: "L2A", processingLevelAfter: "L2A", softwareVersion });
   });
 
   it("stores NDVI difference beside the finished run record for the local viewer", async () => {
@@ -128,6 +159,7 @@ describe("The bounded change run", () => {
     const { record: third } = await executeChangeRun(input);
 
     expect(second.cacheHit).toBe(true);
+    expect(second.review?.candidateFlags).toBeInstanceOf(Uint8Array);
     expect(second.sourceHashes).toEqual(first.sourceHashes);
     expect(third.cacheHit).toBe(false);
     expect(third.sourceHashes?.[join(rasters, "before-red.tif")]).not.toBe(

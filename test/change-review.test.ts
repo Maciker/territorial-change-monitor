@@ -1,4 +1,6 @@
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { navarreExampleContract, reviewCandidateChange } from "../packages/domain/src/index.js";
 import { writeQgisRecipe } from "../apps/cli/src/write-qgis-recipe.js";
@@ -42,6 +44,9 @@ describe("The candidate change review", () => {
     expect(review.candidateCount).toBe(1);
     expect(review.candidateAreaKm2).toBeGreaterThan(0);
     expect(review.limitations.join(" ")).toMatch(/seasonality|cloud|registration/i);
+    expect(review.limitations.join(" ")).toMatch(/bounding boxes/);
+    expect(review.limitations.join(" ")).toMatch(/scene-level/);
+    expect(review.limitations.join(" ")).toMatch(/not been calibrated/);
   });
 
   it("reports no candidates for a no-change pair", () => {
@@ -75,11 +80,23 @@ describe("The candidate change review", () => {
     expect(highThreshold.candidateAreaKm2).toBe(0);
   });
 
-  it("writes a relative-path QGIS recipe without Python", () => {
-    const path = writeQgisRecipe("outputs/fixture-run");
+  it("counts gains and losses separately because the threshold applies to the absolute difference", () => {
+    const review = reviewAt({ difference: [0.5, -0.5, 0.1, -0.1], valid: [1, 1, 1, 1] }, 0.2);
+
+    expect(review.candidateCount).toBe(2);
+    expect(review.gainCount).toBe(1);
+    expect(review.lossCount).toBe(1);
+  });
+
+  it("writes a relative-path QGIS recipe without Python using the contract threshold", () => {
+    const directory = mkdtempSync(join(tmpdir(), "recipe-"));
+
+    const path = writeQgisRecipe(directory, { ...navarreExampleContract, changeThreshold: 0.35 });
 
     const text = readFileSync(path, "utf8");
-    expect(text).toContain("test/fixtures/rasters/");
+    expect(text).toContain("ndvi-difference.tif");
+    expect(text).toContain("|after - before| >= 0.35");
+    expect(text).not.toContain("0.20");
     expect(text).not.toContain(".py");
   });
 });

@@ -19,5 +19,13 @@ export { reviewCandidateChange } from "./change-review.js";
 export type { ChangeReview, ChangeReviewInput, ChangeSign } from "./change-review.js";
 export { intersectionCoveragePercent, selectComparableScenes } from "./scene.js";
 export type { CatalogItem, Scene, SceneBand, SceneBandName, ScenePair } from "./scene.js";
-export { applyScaleOffset, assertPixelBudget, assertSameGrid, combineMasks, validityMask } from "./raster-grid.js";
-export type { RasterBand } from "./raster-grid.js";
+export {
+  applyScaleOffset,
+  assertPixelBudget,
+  assertSameGrid,
+  combineMasks,
+  excludedSclClasses,
+  rawValidData,
+  validityMask,
+} from "./raster-grid.js";
+export type { BandReadOptions, RasterBand } from "./raster-grid.js";

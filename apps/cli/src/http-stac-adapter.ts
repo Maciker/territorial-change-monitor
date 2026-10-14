@@ -12,8 +12,15 @@ type StacFeature = {
     "eo:cloud_cover"?: number;
     "s2:product_type"?: string;
   };
-  assets?: Record<string, { href?: string; "raster:scale"?: number; "raster:offset"?: number }>;
+  assets?: Record<string, StacAsset>;
   links?: Array<{ rel?: string; href?: string }>;
+};
+
+type StacAsset = {
+  href?: string;
+  "raster:scale"?: number;
+  "raster:offset"?: number;
+  "raster:bands"?: Array<{ scale?: number; offset?: number; nodata?: number }>;
 };
 
 type StacPage = {
@@ -50,37 +57,46 @@ export class HttpStacAdapter implements StacCatalog {
   private async fetchPage(url: string, body: string | undefined): Promise<StacPage> {
     let lastError: Error | undefined;
     for (let attempt = 0; attempt <= this.retryCap; attempt += 1) {
+      let response: Response;
       try {
-        const response = await this.fetchFn(url, {
+        response = await this.fetchFn(url, {
           method: body ? "POST" : "GET",
           headers: { "content-type": "application/json" },
           ...(body ? { body } : {}),
           signal: AbortSignal.timeout(this.timeoutMs),
         });
-        if (!response.ok) throw new Error(`STAC search failed with ${response.status}`);
-        return (await response.json()) as StacPage;
       } catch (error) {
         lastError = error instanceof Error ? error : new Error("STAC search failed");
+        continue;
       }
+      if (response.ok) return (await response.json()) as StacPage;
+      if (!isRetryable(response.status)) {
+        throw DomainError.create(`STAC search failed with ${response.status}`);
+      }
+      lastError = new Error(`STAC search failed with ${response.status}`);
     }
     throw DomainError.create(`STAC search exhausted retries: ${lastError?.message ?? "unknown error"}`);
   }
 }
 
+function isRetryable(status: number): boolean {
+  return status === 429 || status >= 500;
+}
+
 function toCatalogItem(feature: StacFeature): CatalogItem {
-  const bbox = feature.bbox ?? [0, 0, 0, 0];
+  const id = feature.id;
+  if (!id) throw DomainError.createValidation("STAC feature is missing id");
+  const bbox = feature.bbox;
+  if (!bbox || bbox.length < 4) throw DomainError.createValidation(`STAC feature ${id} is missing bbox`);
+  const datetime = feature.properties?.datetime;
+  if (!datetime) throw DomainError.createValidation(`STAC feature ${id} is missing datetime`);
   return {
-    id: feature.id ?? "unknown",
-    datetime: feature.properties?.datetime ?? "",
+    id,
+    datetime,
     processingLevel: feature.properties?.["s2:product_type"] ?? "L2A",
+    // A missing cloud cover is treated as fully cloudy so the scene never qualifies.
     cloudCoverPercent: feature.properties?.["eo:cloud_cover"] ?? 100,
-    bbox: {
-      west: bbox[0] ?? 0,
-      south: bbox[1] ?? 0,
-      east: bbox[2] ?? 0,
-      north: bbox[3] ?? 0,
-      crs: "EPSG:4326",
-    },
+    bbox: { west: bbox[0]!, south: bbox[1]!, east: bbox[2]!, north: bbox[3]!, crs: "EPSG:4326" },
     href: feature.links?.find((link) => link.rel === "self")?.href ?? "",
     bands: [
       band("red", feature.assets?.B04),
@@ -90,15 +106,17 @@ function toCatalogItem(feature: StacFeature): CatalogItem {
   };
 }
 
-function band(
-  name: SceneBand["name"],
-  asset: { href?: string; "raster:scale"?: number; "raster:offset"?: number } | undefined,
-): SceneBand | undefined {
+function band(name: SceneBand["name"], asset: StacAsset | undefined): SceneBand | undefined {
   if (!asset?.href) return undefined;
+  const raster = asset["raster:bands"]?.[0];
+  const noData = raster?.nodata;
+  const isClassMap = name === "scl";
+  const defaultScale = isClassMap ? 1 : 0.0001;
   return {
     name,
     href: asset.href,
-    scale: asset["raster:scale"] ?? 0.0001,
-    offset: asset["raster:offset"] ?? 0,
+    scale: isClassMap ? 1 : (raster?.scale ?? asset["raster:scale"] ?? defaultScale),
+    offset: isClassMap ? 0 : (raster?.offset ?? asset["raster:offset"] ?? 0),
+    ...(noData === undefined ? {} : { noData }),
   };
 }

@@ -2,20 +2,7 @@ import { readFileSync } from "node:fs";
 import { parse } from "yaml";
 import { DomainError, createRunContract, type RunContract, type RunContractInput } from "../../../packages/domain/src/index.js";
 
-type RunFile = {
-  question?: string;
-  before?: { start?: string; end?: string };
-  after?: { start?: string; end?: string };
-  max_cloud_cover?: number;
-  index?: string;
-  change_threshold?: number;
-  change_sign?: string;
-  minimum_region_pixels?: number;
-  success_condition?: string;
-  limitations?: string[];
-  source_license?: string;
-  units?: string;
-};
+type RunFile = Record<string, unknown>;
 
 type GeoJsonPolygon = {
   features?: Array<{
@@ -24,41 +11,64 @@ type GeoJsonPolygon = {
 };
 
 export function loadRunContract(yamlPath: string, aoiPath: string): RunContract {
-  const file = parse(readFileSync(yamlPath, "utf8")) as RunFile;
+  const parsed: unknown = parse(readFileSync(yamlPath, "utf8"));
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    throw DomainError.createValidation("Run file must be a YAML mapping");
+  }
+  const file = parsed as RunFile;
   if (file.index !== "ndvi") {
     throw DomainError.createValidation("Only the NDVI index is supported");
   }
+  const before = window(file.before, "before");
+  const after = window(file.after, "after");
   const input: RunContractInput = {
     question: requiredText(file.question, "question"),
     aoi: boundingBoxFromGeoJson(aoiPath),
-    before: {
-      start: requiredText(file.before?.start, "before.start"),
-      end: requiredText(file.before?.end, "before.end"),
-    },
-    after: {
-      start: requiredText(file.after?.start, "after.start"),
-      end: requiredText(file.after?.end, "after.end"),
-    },
+    before,
+    after,
     successCondition: requiredText(file.success_condition, "success_condition"),
-    limitations: file.limitations ?? [],
+    limitations: textList(file.limitations, "limitations"),
     sourceLicense: requiredText(file.source_license, "source_license"),
     units: requiredText(file.units, "units"),
-    maxCloudCoverPercent: file.max_cloud_cover ?? 20,
+    maxCloudCoverPercent: optionalNumber(file.max_cloud_cover, "max_cloud_cover", 20),
     index: "ndvi",
-    changeThreshold: file.change_threshold ?? 0.2,
+    changeThreshold: optionalNumber(file.change_threshold, "change_threshold", 0.2),
     changeSign: changeSign(file.change_sign),
-    minimumRegionPixels: file.minimum_region_pixels ?? 1,
+    minimumRegionPixels: optionalNumber(file.minimum_region_pixels, "minimum_region_pixels", 1),
   };
   return createRunContract(input);
 }
 
-function changeSign(value: string | undefined): "afterMinusBefore" {
+function window(value: unknown, field: string): { start: string; end: string } {
+  const entry = (typeof value === "object" && value !== null ? value : {}) as Record<string, unknown>;
+  return {
+    start: requiredText(entry.start, `${field}.start`),
+    end: requiredText(entry.end, `${field}.end`),
+  };
+}
+
+function changeSign(value: unknown): "afterMinusBefore" {
   if (value === undefined || value === "afterMinusBefore") return "afterMinusBefore";
   throw DomainError.createValidation("Unsupported change sign");
 }
 
-function requiredText(value: string | undefined, field: string): string {
-  if (!value) throw DomainError.createValidation(`Missing ${field}`);
+function requiredText(value: unknown, field: string): string {
+  if (value === undefined || value === null || value === "") throw DomainError.createValidation(`Missing ${field}`);
+  if (typeof value !== "string") throw DomainError.createValidation(`${field} must be text`);
+  return value;
+}
+
+function optionalNumber(value: unknown, field: string, fallback: number): number {
+  if (value === undefined) return fallback;
+  if (typeof value !== "number") throw DomainError.createValidation(`${field} must be a number`);
+  return value;
+}
+
+function textList(value: unknown, field: string): string[] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || !value.every((entry) => typeof entry === "string")) {
+    throw DomainError.createValidation(`${field} must be a list of text`);
+  }
   return value;
 }
 

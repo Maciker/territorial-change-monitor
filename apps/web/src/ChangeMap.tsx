@@ -1,17 +1,23 @@
 import { useEffect, useRef } from "react";
-import { Map } from "maplibre-gl";
+import { Map, setWorkerUrl } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+// Let Vite bundle the module worker with its shared chunk; MapLibre's default URL is not emitted by the build.
+import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import type { BoundingBox } from "../../../packages/domain/src/index.js";
 import { createOfflineAoiStyle } from "./offline-map-style.js";
 import { aoiMapCaption } from "./viewer-copy.js";
 
+setWorkerUrl(maplibreWorkerUrl);
+
 interface Props {
   bbox: BoundingBox;
+  width: number;
+  height: number;
 }
 
 export function ChangeMap(props: Props) {
   const container = useRef<HTMLDivElement>(null);
-  const mapCaption = aoiMapCaption(props.bbox.crs);
+  const mapCaption = aoiMapCaption(props.bbox.crs, props.width, props.height);
 
   useEffect(() => {
     if (!container.current) return;
@@ -48,9 +54,11 @@ export function ChangeMap(props: Props) {
   }, [props.bbox]);
 
   return (
-    <section className="map-panel" aria-label={mapCaption}>
-      <div ref={container} className="map-canvas" role="img" aria-label={mapCaption} />
-      <p className="map-caption">{mapCaption}</p>
+    <section className="map-panel">
+      <div ref={container} className="map-canvas" role="img" aria-label="AOI map" aria-describedby="map-caption" />
+      <p id="map-caption" className="map-caption">
+        {mapCaption}
+      </p>
     </section>
   );
 }

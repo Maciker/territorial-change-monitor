@@ -1,4 +1,5 @@
 import { DomainError, type RunContract, type ScenePair } from "../../domain/src/index.js";
+import { coverageVerdict } from "./change-report.js";
 import { computeNdviDifference, type NdviDifferenceResult } from "./compute-ndvi-difference.js";
 import type { RasterReader } from "./ports/raster-reader.js";
 import { readAlignedRasters } from "./read-aligned-rasters.js";
@@ -6,8 +7,7 @@ import { reviewDifference } from "./review-change.js";
 import { selectScenes } from "./select-scenes.js";
 import type { StacCatalog } from "./ports/stac-catalog.js";
 import type { RunRecord, RunStore } from "./ports/run-store.js";
-
-const softwareVersion = "0.1.0";
+import { softwareVersion } from "./version.js";
 
 export type ChangeRunResult = {
   record: RunRecord;
@@ -26,6 +26,8 @@ export async function executeChangeRun(options: {
     completedStages: [],
     cacheKey: options.store.cacheKey({ contract: options.contract, version: softwareVersion }),
     cacheHit: false,
+    contract: options.contract,
+    softwareVersion,
   };
   try {
     abortIfNeeded(options.signal, options.store, record);
@@ -37,6 +39,8 @@ export async function executeChangeRun(options: {
     record.afterId = pair.after.id;
     record.acquiredBefore = pair.before.acquiredAt;
     record.acquiredAfter = pair.after.acquiredAt;
+    record.processingLevelBefore = pair.before.processingLevel;
+    record.processingLevelAfter = pair.after.processingLevel;
     const sourceHashes = await digestPair(pair, options.reader);
     record.sourceHashes = sourceHashes;
     record.cacheKey = options.store.cacheKey({
@@ -55,6 +59,7 @@ export async function executeChangeRun(options: {
     const difference = computeNdviDifference(options.contract, pair, rasters);
     record.completedStages.push("difference");
     record.validCoverage = difference.validCoverage;
+    record.coverageVerdict = coverageVerdict(difference.validCoverage);
     abortIfNeeded(options.signal, options.store, record);
     record.review = reviewDifference(options.contract, rasters, difference);
     record.completedStages.push("review");

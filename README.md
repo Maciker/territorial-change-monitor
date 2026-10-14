@@ -4,7 +4,13 @@ Compare a bounded pair of Sentinel-2 observations, mask invalid pixels and repor
 
 ## Current state
 
-The TypeScript MVP runs offline against recorded fixtures: a frozen Navarre AOI, STAC selection, aligned GeoTIFF reads, masked NDVI difference, thresholded review, resumable CLI, and a local MapLibre report. It does not download live imagery in CI and does not claim a cause for change.
+The TypeScript MVP runs offline against **synthetic** fixtures: a frozen Navarre AOI, STAC selection from a recorded catalog, aligned GeoTIFF reads with NoData and SCL masks, masked NDVI difference, a thresholded review (|after − before| ≥ threshold, gains and losses counted separately), a CLI whose completed runs are cached by contract and source-file hashes, a QGIS-ready difference GeoTIFF and a local MapLibre report. It does not claim a cause for change.
+
+What it does not do yet:
+
+- **No real imagery path.** `HttpStacAdapter` is tested but not wired into the CLI, the raster reader only opens local files, and it rejects anything other than EPSG:4326 on a shared grid. Real Sentinel-2 L2A tiles (UTM, 10 m and 20 m bands) are rejected explicitly rather than reprojected or resampled.
+- **No stage-level resume.** A cancelled run restarts from the beginning; only a completed run with unchanged inputs is reused.
+- **No calibration.** The 0.20 threshold is predeclared for screening, not validated against reference data.
 
 All application, CLI and web code uses TypeScript on Node.js. QGIS desktop and PostGIS SQL remain GIS tools. There is no Python, FastAPI or PyQGIS runtime.
 
@@ -22,7 +28,7 @@ pnpm change-run
 pnpm web
 ```
 
-`pnpm change-run` writes `outputs/fixture-run/` (gitignored). `pnpm web` serves the local viewer. See [local development](docs/development.md), [fixtures](docs/fixtures.md), [project specification](docs/project-spec.md), [architecture](docs/architecture.md) and [roadmap](docs/roadmap.md).
+`pnpm change-run` writes `outputs/fixture-run/` (gitignored): `run.json` with the effective contract and source hashes, `report.txt`, `ndvi-difference.json`, `ndvi-difference.tif` and a QGIS recipe. It runs on the synthetic 20×20 demo scene described in [data/fixtures/navarre-demo](data/fixtures/navarre-demo/README.md): a loss patch, a gain patch, an isolated pixel, a masked cloud and a NoData column, giving 51 candidates (20 gain, 31 loss) at 0.875 valid coverage. `pnpm web` serves the local viewer, which works with external network access blocked. See [local development](docs/development.md), [fixtures](docs/fixtures.md), [project specification](docs/project-spec.md), [architecture](docs/architecture.md) and [roadmap](docs/roadmap.md).
 
 ## Agent workflow
 

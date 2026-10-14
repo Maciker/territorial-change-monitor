@@ -18,6 +18,10 @@ export type ChangeReview = {
   sign: ChangeSign;
   minimumRegionPixels: number;
   candidateCount: number;
+  /** Candidates where after - before is positive. */
+  gainCount: number;
+  /** Candidates where after - before is negative. */
+  lossCount: number;
   candidateAreaKm2: number;
   candidateFlags: Uint8Array;
   limitations: readonly string[];
@@ -27,6 +31,9 @@ const reviewLimitations = [
   "Registration residuals can create false candidate edges.",
   "Residual clouds and cloud shadows can survive the SCL mask.",
   "Seasonality can change NDVI without a lasting land-surface conversion.",
+  "Scene coverage is estimated from catalog bounding boxes, not from valid-data footprints.",
+  "Cloud cover filtering uses scene-level metadata, not cloud cover over the AOI.",
+  "The change threshold is predeclared for screening and has not been calibrated against reference data.",
 ];
 
 export function reviewCandidateChange(input: ChangeReviewInput): ChangeReview {
@@ -36,12 +43,15 @@ export function reviewCandidateChange(input: ChangeReviewInput): ChangeReview {
   });
   const candidateFlags = dropSmallRegions(rawFlags, input.width, input.height, input.minimumRegionPixels);
   const candidateCount = candidateFlags.reduce((total, flag) => total + flag, 0);
+  const gainCount = candidateFlags.reduce((total, flag, index) => total + (flag === 1 && input.difference[index]! > 0 ? 1 : 0), 0);
   const pixelArea = aoiAreaKm2(input.bbox) / (input.width * input.height);
   return {
     threshold: input.threshold,
     sign: input.sign,
     minimumRegionPixels: input.minimumRegionPixels,
     candidateCount,
+    gainCount,
+    lossCount: candidateCount - gainCount,
     candidateAreaKm2: candidateCount * pixelArea,
     candidateFlags,
     limitations: reviewLimitations,

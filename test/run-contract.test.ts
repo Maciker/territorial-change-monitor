@@ -61,4 +61,19 @@ describe("The run contract", () => {
       }),
     ).toThrow(/observation/i);
   });
+
+  it.each([0, -0.1, 2.5, Number.NaN, Number.POSITIVE_INFINITY])(
+    "rejects a change threshold of %s",
+    (changeThreshold) => {
+      expect(() => createRunContract({ ...navarreExampleContract, changeThreshold })).toThrow(/change threshold/i);
+    },
+  );
+
+  it("accepts the largest possible NDVI difference as threshold", () => {
+    expect(createRunContract({ ...navarreExampleContract, changeThreshold: 2 }).changeThreshold).toBe(2);
+  });
+
+  it("rejects a non-numeric cloud cover", () => {
+    expect(() => createRunContract({ ...navarreExampleContract, maxCloudCoverPercent: Number.NaN })).toThrow(/cloud cover/i);
+  });
 });

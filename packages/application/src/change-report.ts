@@ -1,23 +1,65 @@
-import type { BoundingBox, RunContract } from "../../domain/src/index.js";
+import { excludedSclClasses, type BoundingBox, type ChangeSign, type RunContract } from "../../domain/src/index.js";
 import type { DifferenceProvenance } from "./compute-ndvi-difference.js";
 import type { RunRecord } from "./ports/run-store.js";
+import { stacSearchBounds } from "./select-scenes.js";
 
 export type ReportInput = {
   contract: RunContract;
   beforeId: string;
   afterId: string;
   candidateCount: number;
+  gainCount?: number;
+  lossCount?: number;
   validCoverage: number;
   threshold: number;
   acquiredBefore: string;
   acquiredAfter: string;
+  provenance?: ReportProvenance;
+  reviewLimitations?: readonly string[];
 };
+
+/** Below this share of valid pixels a run is reported as insufficient evidence. */
+export const minimumValidCoverage = 0.2;
+
+export type CoverageVerdict = "sufficient" | "insufficient";
+
+export function coverageVerdict(validCoverage: number): CoverageVerdict {
+  return validCoverage < minimumValidCoverage ? "insufficient" : "sufficient";
+}
+
+export type ReportProvenance = {
+  collection: string;
+  processingLevelBefore: string;
+  processingLevelAfter: string;
+  sourceHashes: Record<string, string>;
+  softwareVersion: string;
+};
+
+/** Report provenance from a run record, empty when the record predates provenance fields. */
+export function reportProvenance(record: RunRecord): { provenance?: ReportProvenance } {
+  if (!record.sourceHashes || !record.processingLevelBefore || !record.processingLevelAfter || !record.softwareVersion) {
+    return {};
+  }
+  return {
+    provenance: {
+      collection: stacSearchBounds.collection,
+      processingLevelBefore: record.processingLevelBefore,
+      processingLevelAfter: record.processingLevelAfter,
+      sourceHashes: record.sourceHashes,
+      softwareVersion: record.softwareVersion,
+    },
+  };
+}
+
+const causalLimitation = "Spectral change is not evidence of cause.";
 
 export type RunView =
   | {
       kind: "ready";
       report: string;
       bbox: BoundingBox;
+      width: number;
+      height: number;
       beforeNdvi: number[];
       afterNdvi: number[];
       difference: number[];
@@ -29,6 +71,8 @@ export type RunView =
         validCoverage: number;
         acquiredBefore: string;
         acquiredAfter: string;
+        minimumRegionPixels: number;
+        changeSign: ChangeSign;
       };
     }
   | { kind: "failed"; message: string }
@@ -37,10 +81,44 @@ export type RunView =
 export function formatChangeReport(input: ReportInput): string {
   return [
     `Question: ${input.contract.question}`,
-    "Method: Sentinel-2 L2A NDVI, after minus before, on the shared validity mask.",
-    `Evidence: ${input.beforeId} acquired ${input.acquiredBefore} compared with ${input.afterId} acquired ${input.acquiredAfter}; ${input.candidateCount} candidate pixels at threshold ${input.threshold}; valid-pixel coverage ${input.validCoverage}.`,
-    `Limitations: ${input.contract.limitations.join(" ")} Spectral change is not evidence of cause.`,
+    `Method: Sentinel-2 L2A NDVI difference (after - before) on the shared validity mask; a pixel is a candidate when |after - before| >= ${input.threshold}, so gains and losses both count.`,
+    `Evidence: ${input.beforeId} acquired ${input.acquiredBefore} compared with ${input.afterId} acquired ${input.acquiredAfter}; ${input.candidateCount} candidate pixels${directionText(input)} at threshold ${input.threshold}; valid-pixel coverage ${input.validCoverage}.`,
+    coverageLine(input.validCoverage),
+    ...provenanceLines(input),
+    `Limitations: ${limitationsText([...input.contract.limitations, ...(input.reviewLimitations ?? [])])}`,
   ].join("\n");
+}
+
+function provenanceLines(input: ReportInput): string[] {
+  const provenance = input.provenance;
+  const lines = [
+    `Masking: NoData and Sentinel-2 SCL classes ${excludedSclClasses.join(", ")} are excluded; no resampling or reprojection is applied.`,
+  ];
+  if (!provenance) return lines;
+  const hashes = Object.entries(provenance.sourceHashes)
+    .map(([source, hash]) => `${source} sha256:${hash}`)
+    .join("; ");
+  return [
+    `Collection: ${provenance.collection}; processing level ${provenance.processingLevelBefore} / ${provenance.processingLevelAfter}; license ${input.contract.sourceLicense}; software ${provenance.softwareVersion}.`,
+    ...lines,
+    `Sources: ${hashes}.`,
+  ];
+}
+
+function coverageLine(validCoverage: number): string {
+  return coverageVerdict(validCoverage) === "insufficient"
+    ? `Coverage verdict: insufficient (below ${minimumValidCoverage}); too few valid pixels to interpret the candidates.`
+    : `Coverage verdict: sufficient (valid-pixel share of at least ${minimumValidCoverage}).`;
+}
+
+function limitationsText(limitations: readonly string[]): string {
+  const all = limitations.includes(causalLimitation) ? limitations : [...limitations, causalLimitation];
+  return all.join(" ");
+}
+
+function directionText(input: ReportInput): string {
+  if (input.gainCount === undefined || input.lossCount === undefined) return "";
+  return ` (${input.gainCount} gain, ${input.lossCount} loss)`;
 }
 
 export function createRunView(
@@ -49,6 +127,8 @@ export function createRunView(
     | (ReportInput & {
         status: "complete";
         bbox: BoundingBox;
+        width: number;
+        height: number;
         beforeNdvi: number[];
         afterNdvi: number[];
         difference: number[];
@@ -58,13 +138,15 @@ export function createRunView(
   if (input.status === "failed") {
     return { kind: "failed", message: input.error ?? "The run failed." };
   }
-  if (input.validCoverage < 0.2) {
+  if (coverageVerdict(input.validCoverage) === "insufficient") {
     return { kind: "insufficient", message: "Insufficient valid pixels to review candidate change." };
   }
   return {
     kind: "ready",
     report: formatChangeReport(input),
     bbox: input.bbox,
+    width: input.width,
+    height: input.height,
     beforeNdvi: input.beforeNdvi,
     afterNdvi: input.afterNdvi,
     difference: input.difference,
@@ -76,6 +158,8 @@ export function createRunView(
       validCoverage: input.validCoverage,
       acquiredBefore: input.acquiredBefore,
       acquiredAfter: input.acquiredAfter,
+      minimumRegionPixels: input.contract.minimumRegionPixels,
+      changeSign: input.contract.changeSign,
     },
   };
 }
@@ -105,8 +189,11 @@ export function viewFromFixture(fixture: StoredRunFixture, contract: RunContract
       ? createRunView({ status: "failed" })
       : createRunView({ status: "failed", error: fixture.error });
   }
+  const shape = gridShape(fixture.difference.length);
+  if (!shape) return createRunView({ status: "failed", error: unknownShapeMessage });
   return createRunView({
     status: "complete",
+    ...shape,
     contract: { ...contract, question: fixture.question, limitations: fixture.limitations },
     beforeId: fixture.beforeId,
     afterId: fixture.afterId,
@@ -124,6 +211,8 @@ export function viewFromFixture(fixture: StoredRunFixture, contract: RunContract
 }
 
 export type StoredDifferencePayload = {
+  width?: number;
+  height?: number;
   beforeNdvi: Array<number | null>;
   afterNdvi: Array<number | null>;
   difference: Array<number | null>;
@@ -160,15 +249,22 @@ export function viewFromRunArtifacts(
       error: "Missing or incomplete run artifacts.",
     });
   }
+  const shape = gridShape(difference.difference.length, difference.width, difference.height);
+  if (!shape) return createRunView({ status: "failed", error: unknownShapeMessage });
+  const effectiveContract = record.contract ?? contract;
   return createRunView({
     status: "complete",
-    contract,
+    ...shape,
+    contract: effectiveContract,
     beforeId: record.beforeId ?? difference.provenance.beforeId,
     afterId: record.afterId ?? difference.provenance.afterId,
     candidateCount: record.review?.candidateCount ?? 0,
+    ...(record.review ? { gainCount: record.review.gainCount, lossCount: record.review.lossCount } : {}),
+    ...reportProvenance(record),
+    ...(record.review ? { reviewLimitations: record.review.limitations } : {}),
     validCoverage: difference.validCoverage,
     threshold: record.review?.threshold ?? difference.provenance.changeThreshold,
-    bbox: contract.aoi,
+    bbox: effectiveContract.aoi,
     beforeNdvi: difference.beforeNdvi.map((value) => value ?? Number.NaN),
     afterNdvi: difference.afterNdvi.map((value) => value ?? Number.NaN),
     difference: difference.difference.map((value) => value ?? Number.NaN),
@@ -176,4 +272,15 @@ export function viewFromRunArtifacts(
     acquiredBefore: record.acquiredBefore ?? "",
     acquiredAfter: record.acquiredAfter ?? "",
   });
+}
+
+const unknownShapeMessage = "Unknown raster grid shape in run artifacts.";
+
+/** Grid shape from stored dimensions, or a square grid for payloads written before they were stored. */
+function gridShape(length: number, width?: number, height?: number): { width: number; height: number } | undefined {
+  if (width !== undefined && height !== undefined) {
+    return width * height === length ? { width, height } : undefined;
+  }
+  const side = Math.sqrt(length);
+  return Number.isInteger(side) && side > 0 ? { width: side, height: side } : undefined;
 }

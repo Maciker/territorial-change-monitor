@@ -54,6 +54,54 @@ describe("The viewer run artifacts", () => {
     expect(view.report).not.toContain("FROM-DIFF-BEFORE");
   });
 
+  it("uses the contract recorded with the run instead of the fallback contract", () => {
+    const recorded = {
+      ...navarreExampleContract,
+      question: "Recorded question for this run?",
+      aoi: { ...navarreExampleContract.aoi, west: -1.758 },
+      minimumRegionPixels: 3,
+    };
+
+    const view = viewFromRunArtifacts({ ...completeRecord(), contract: recorded }, differencePayload(), navarreExampleContract);
+
+    expect(view.kind).toBe("ready");
+    if (view.kind !== "ready") return;
+    expect(view.report).toContain("Recorded question for this run?");
+    expect(view.bbox).toEqual(recorded.aoi);
+    expect(view.metadata.minimumRegionPixels).toBe(3);
+    expect(view.metadata.changeSign).toBe("afterMinusBefore");
+  });
+
+  it("takes the grid shape from the stored difference", () => {
+    const view = viewFromRunArtifacts(completeRecord(), { ...differencePayload(), width: 2, height: 1 }, navarreExampleContract);
+
+    expect(view.kind).toBe("ready");
+    if (view.kind !== "ready") return;
+    expect(view.width).toBe(2);
+    expect(view.height).toBe(1);
+  });
+
+  it("infers a square grid for payloads written before the shape was stored", () => {
+    const payload: StoredDifferencePayload = { ...differencePayload(), difference: [0, 0, 0, 0], beforeNdvi: [0, 0, 0, 0], afterNdvi: [0, 0, 0, 0], valid: [1, 1, 1, 1] };
+
+    delete payload.width;
+    delete payload.height;
+
+    const view = viewFromRunArtifacts(completeRecord(), payload, navarreExampleContract);
+
+    expect(view.kind === "ready" && [view.width, view.height]).toEqual([2, 2]);
+  });
+
+  it("refuses a payload whose shape cannot be determined", () => {
+    const legacy = differencePayload();
+    delete legacy.width;
+    delete legacy.height;
+
+    const view = viewFromRunArtifacts(completeRecord(), legacy, navarreExampleContract);
+
+    expect(view).toEqual({ kind: "failed", message: "Unknown raster grid shape in run artifacts." });
+  });
+
   it("surfaces incomplete and cancelled runs as failed instead of ready", () => {
     const incomplete = viewFromRunArtifacts(
       { ...completeRecord(), status: "incomplete" },
@@ -124,6 +172,8 @@ function completeRecord(): RunRecord {
       minimumRegionPixels: 1,
       candidateFlags: Uint8Array.from([1, 0]),
       candidateCount: 1,
+      gainCount: 0,
+      lossCount: 1,
       candidateAreaKm2: 0.01,
       limitations: ["Spectral change is not evidence of cause."],
     },
@@ -132,6 +182,8 @@ function completeRecord(): RunRecord {
 
 function differencePayload(): StoredDifferencePayload {
   return {
+    width: 2,
+    height: 1,
     beforeNdvi: [0.5, null],
     afterNdvi: [0, 0.5],
     difference: [-0.5, null],
@@ -142,6 +194,8 @@ function differencePayload(): StoredDifferencePayload {
       afterId: "S2A_20250611_NAVARRE",
       beforeRedHash: "a",
       afterRedHash: "b",
+      beforeNirHash: "c",
+      afterNirHash: "d",
       units: "NDVI difference",
       softwareVersion: "0.1.0",
       changeThreshold: 0.2,

@@ -3,7 +3,11 @@ import { navarreExampleContract } from "../packages/domain/src/index.js";
 import { selectScenes, stacSearchBounds } from "../packages/application/src/index.js";
 import { FixtureStacAdapter } from "../apps/cli/src/fixture-stac-adapter.js";
 import { HttpStacAdapter } from "../apps/cli/src/http-stac-adapter.js";
-import type { CatalogItem } from "../packages/domain/src/index.js";
+import type { CatalogItem, SceneBand } from "../packages/domain/src/index.js";
+
+const redHref = "https://example.test/red.tif";
+const nirHref = "https://example.test/nir.tif";
+const sclHref = "https://example.test/scl.tif";
 
 describe("The STAC adapters", () => {
   it("select a recorded fixture pair for the Navarre contract", async () => {
@@ -105,9 +109,108 @@ describe("The STAC adapters", () => {
     });
 
     expect(items[0]?.id).toBe("http-before");
+    expect(items[0]?.bands).toEqual([expectedBand("red", redHref), expectedBand("nir", nirHref)]);
+  });
+
+  it("defaults SCL to class-map scale when raster:bands is missing", async () => {
+    const adapter = adapterReturning({
+      features: [
+        feature({
+          B04: { href: redHref },
+          B08: { href: nirHref },
+          SCL: { href: sclHref },
+        }),
+      ],
+    });
+
+    const items = await adapter.search(query());
+
     expect(items[0]?.bands).toEqual([
-      { name: "red", href: "https://example.test/red.tif", scale: 0.0001, offset: 0 },
-      { name: "nir", href: "https://example.test/nir.tif", scale: 0.0001, offset: 0 },
+      expectedBand("red", redHref),
+      expectedBand("nir", nirHref),
+      expectedBand("scl", sclHref, 1, 0),
     ]);
   });
+
+  it("read scale, offset and NoData from the STAC raster extension", async () => {
+    const adapter = adapterReturning({
+      features: [
+        feature({
+          B04: { href: redHref, "raster:bands": [{ scale: 0.0001, offset: -0.1, nodata: 0 }] },
+          B08: { href: nirHref, "raster:bands": [{ scale: 0.0001, offset: -0.1, nodata: 0 }] },
+        }),
+      ],
+    });
+
+    const items = await adapter.search(query());
+
+    expect(items[0]?.bands).toEqual([
+      expectedBand("red", redHref, 0.0001, -0.1, 0),
+      expectedBand("nir", nirHref, 0.0001, -0.1, 0),
+    ]);
+  });
+
+  it.each(["id", "bbox", "datetime"])("reject a feature without %s instead of inventing one", async (field) => {
+    const incomplete = feature({ B04: { href: "https://example.test/red.tif" } }) as Record<string, unknown>;
+    if (field === "datetime") incomplete.properties = { "eo:cloud_cover": 4 };
+    else delete incomplete[field];
+    const adapter = adapterReturning({ features: [incomplete] });
+
+    await expect(adapter.search(query())).rejects.toThrow(new RegExp(`missing ${field}`, "i"));
+  });
+
+  it("do not retry a client error other than rate limiting", async () => {
+    let attempts = 0;
+    const adapter = new HttpStacAdapter(
+      "https://example.test/search",
+      async () => {
+        attempts += 1;
+        return new Response("bad request", { status: 400 });
+      },
+      stacSearchBounds.timeoutMs,
+      stacSearchBounds.retryCap,
+    );
+
+    await expect(adapter.search(query())).rejects.toThrow(/400/);
+    expect(attempts).toBe(1);
+  });
 });
+
+function query() {
+  return {
+    collection: "sentinel-2-l2a",
+    bbox: [-1.76, 42.8, -1.75, 42.81] as const,
+    start: "2024-06-01",
+    end: "2024-06-30",
+    pageSize: 10,
+    maxPages: 1,
+  };
+}
+
+function feature(assets: Record<string, unknown>) {
+  return {
+    id: "http-before",
+    bbox: [-1.77, 42.79, -1.74, 42.82],
+    properties: { datetime: "2024-06-12T10:55:00Z", "eo:cloud_cover": 4, "s2:product_type": "S2MSI2A" },
+    assets,
+  };
+}
+
+function adapterReturning(page: unknown): HttpStacAdapter {
+  return new HttpStacAdapter(
+    "https://example.test/search",
+    async () => new Response(JSON.stringify(page), { status: 200, headers: { "content-type": "application/json" } }),
+    stacSearchBounds.timeoutMs,
+    stacSearchBounds.retryCap,
+  );
+}
+
+function expectedBand(
+  name: SceneBand["name"],
+  href: string,
+  scale = 0.0001,
+  offset = 0,
+  noData?: number,
+): SceneBand {
+  return noData === undefined ? { name, href, scale, offset } : { name, href, scale, offset, noData };
+}
