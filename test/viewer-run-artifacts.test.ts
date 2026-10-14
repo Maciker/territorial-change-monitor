@@ -54,6 +54,24 @@ describe("The viewer run artifacts", () => {
     expect(view.report).not.toContain("FROM-DIFF-BEFORE");
   });
 
+  it("uses the contract recorded with the run instead of the fallback contract", () => {
+    const recorded = {
+      ...navarreExampleContract,
+      question: "Recorded question for this run?",
+      aoi: { ...navarreExampleContract.aoi, west: -1.758 },
+      minimumRegionPixels: 3,
+    };
+
+    const view = viewFromRunArtifacts({ ...completeRecord(), contract: recorded }, differencePayload(), navarreExampleContract);
+
+    expect(view.kind).toBe("ready");
+    if (view.kind !== "ready") return;
+    expect(view.report).toContain("Recorded question for this run?");
+    expect(view.bbox).toEqual(recorded.aoi);
+    expect(view.metadata.minimumRegionPixels).toBe(3);
+    expect(view.metadata.changeSign).toBe("afterMinusBefore");
+  });
+
   it("surfaces incomplete and cancelled runs as failed instead of ready", () => {
     const incomplete = viewFromRunArtifacts(
       { ...completeRecord(), status: "incomplete" },

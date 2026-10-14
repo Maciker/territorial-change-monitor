@@ -1,4 +1,4 @@
-import type { ChangeReview } from "../../../domain/src/index.js";
+import type { ChangeReview, RunContract } from "../../../domain/src/index.js";
 
 export type RunStage = "validate" | "select" | "read" | "difference" | "review";
 
@@ -7,6 +7,8 @@ export type RunRecord = {
   completedStages: RunStage[];
   cacheKey: string;
   cacheHit: boolean;
+  /** The contract the run was executed with, so viewers never substitute another. */
+  contract?: RunContract;
   error?: string;
   review?: ChangeReview;
   validCoverage?: number;

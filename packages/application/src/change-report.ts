@@ -1,4 +1,4 @@
-import type { BoundingBox, RunContract } from "../../domain/src/index.js";
+import type { BoundingBox, ChangeSign, RunContract } from "../../domain/src/index.js";
 import type { DifferenceProvenance } from "./compute-ndvi-difference.js";
 import type { RunRecord } from "./ports/run-store.js";
 
@@ -31,6 +31,8 @@ export type RunView =
         validCoverage: number;
         acquiredBefore: string;
         acquiredAfter: string;
+        minimumRegionPixels: number;
+        changeSign: ChangeSign;
       };
     }
   | { kind: "failed"; message: string }
@@ -83,6 +85,8 @@ export function createRunView(
       validCoverage: input.validCoverage,
       acquiredBefore: input.acquiredBefore,
       acquiredAfter: input.acquiredAfter,
+      minimumRegionPixels: input.contract.minimumRegionPixels,
+      changeSign: input.contract.changeSign,
     },
   };
 }
@@ -167,16 +171,17 @@ export function viewFromRunArtifacts(
       error: "Missing or incomplete run artifacts.",
     });
   }
+  const effectiveContract = record.contract ?? contract;
   return createRunView({
     status: "complete",
-    contract,
+    contract: effectiveContract,
     beforeId: record.beforeId ?? difference.provenance.beforeId,
     afterId: record.afterId ?? difference.provenance.afterId,
     candidateCount: record.review?.candidateCount ?? 0,
     ...(record.review ? { gainCount: record.review.gainCount, lossCount: record.review.lossCount } : {}),
     validCoverage: difference.validCoverage,
     threshold: record.review?.threshold ?? difference.provenance.changeThreshold,
-    bbox: contract.aoi,
+    bbox: effectiveContract.aoi,
     beforeNdvi: difference.beforeNdvi.map((value) => value ?? Number.NaN),
     afterNdvi: difference.afterNdvi.map((value) => value ?? Number.NaN),
     difference: difference.difference.map((value) => value ?? Number.NaN),

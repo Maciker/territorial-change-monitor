@@ -51,8 +51,8 @@ function ReadyRunView(props: { view: ReadyView }) {
     height: side,
     bbox: props.view.bbox,
     explorationThreshold,
-    sign: navarreExampleContract.changeSign,
-    minimumRegionPixels: navarreExampleContract.minimumRegionPixels,
+    sign: props.view.metadata.changeSign,
+    minimumRegionPixels: props.view.metadata.minimumRegionPixels,
   });
 
   return (

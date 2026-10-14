@@ -27,6 +27,21 @@ describe("The bounded change run", () => {
     expect(JSON.parse(readFileSync(join(directory, "run.json"), "utf8")).status).toBe("complete");
   });
 
+  it("records the effective contract with the run", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "change-run-"));
+    const contract = { ...navarreExampleContract, question: "Which pixels changed in this rehearsal?" };
+
+    await executeChangeRun({
+      contract,
+      catalog: FixtureStacAdapter.fromFile("test/fixtures/stac/navarre-items.json"),
+      reader: new GeotiffRasterAdapter(),
+      store: new FilesystemRunStore(directory),
+    });
+
+    const stored = JSON.parse(readFileSync(join(directory, "run.json"), "utf8")) as { contract: typeof contract };
+    expect(stored.contract).toEqual(contract);
+  });
+
   it("stores NDVI difference beside the finished run record for the local viewer", async () => {
     const directory = mkdtempSync(join(tmpdir(), "change-run-"));
     const store = new FilesystemRunStore(directory);

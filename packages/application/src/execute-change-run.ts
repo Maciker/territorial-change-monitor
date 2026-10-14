@@ -26,6 +26,7 @@ export async function executeChangeRun(options: {
     completedStages: [],
     cacheKey: options.store.cacheKey({ contract: options.contract, version: softwareVersion }),
     cacheHit: false,
+    contract: options.contract,
   };
   try {
     abortIfNeeded(options.signal, options.store, record);
