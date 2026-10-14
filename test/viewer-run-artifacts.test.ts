@@ -72,6 +72,36 @@ describe("The viewer run artifacts", () => {
     expect(view.metadata.changeSign).toBe("afterMinusBefore");
   });
 
+  it("takes the grid shape from the stored difference", () => {
+    const view = viewFromRunArtifacts(completeRecord(), { ...differencePayload(), width: 2, height: 1 }, navarreExampleContract);
+
+    expect(view.kind).toBe("ready");
+    if (view.kind !== "ready") return;
+    expect(view.width).toBe(2);
+    expect(view.height).toBe(1);
+  });
+
+  it("infers a square grid for payloads written before the shape was stored", () => {
+    const payload: StoredDifferencePayload = { ...differencePayload(), difference: [0, 0, 0, 0], beforeNdvi: [0, 0, 0, 0], afterNdvi: [0, 0, 0, 0], valid: [1, 1, 1, 1] };
+
+    delete payload.width;
+    delete payload.height;
+
+    const view = viewFromRunArtifacts(completeRecord(), payload, navarreExampleContract);
+
+    expect(view.kind === "ready" && [view.width, view.height]).toEqual([2, 2]);
+  });
+
+  it("refuses a payload whose shape cannot be determined", () => {
+    const legacy = differencePayload();
+    delete legacy.width;
+    delete legacy.height;
+
+    const view = viewFromRunArtifacts(completeRecord(), legacy, navarreExampleContract);
+
+    expect(view).toEqual({ kind: "failed", message: "Unknown raster grid shape in run artifacts." });
+  });
+
   it("surfaces incomplete and cancelled runs as failed instead of ready", () => {
     const incomplete = viewFromRunArtifacts(
       { ...completeRecord(), status: "incomplete" },
@@ -152,6 +182,8 @@ function completeRecord(): RunRecord {
 
 function differencePayload(): StoredDifferencePayload {
   return {
+    width: 2,
+    height: 1,
     beforeNdvi: [0.5, null],
     afterNdvi: [0, 0.5],
     difference: [-0.5, null],

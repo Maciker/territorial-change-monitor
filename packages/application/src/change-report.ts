@@ -58,6 +58,8 @@ export type RunView =
       kind: "ready";
       report: string;
       bbox: BoundingBox;
+      width: number;
+      height: number;
       beforeNdvi: number[];
       afterNdvi: number[];
       difference: number[];
@@ -125,6 +127,8 @@ export function createRunView(
     | (ReportInput & {
         status: "complete";
         bbox: BoundingBox;
+        width: number;
+        height: number;
         beforeNdvi: number[];
         afterNdvi: number[];
         difference: number[];
@@ -141,6 +145,8 @@ export function createRunView(
     kind: "ready",
     report: formatChangeReport(input),
     bbox: input.bbox,
+    width: input.width,
+    height: input.height,
     beforeNdvi: input.beforeNdvi,
     afterNdvi: input.afterNdvi,
     difference: input.difference,
@@ -183,8 +189,11 @@ export function viewFromFixture(fixture: StoredRunFixture, contract: RunContract
       ? createRunView({ status: "failed" })
       : createRunView({ status: "failed", error: fixture.error });
   }
+  const shape = gridShape(fixture.difference.length);
+  if (!shape) return createRunView({ status: "failed", error: unknownShapeMessage });
   return createRunView({
     status: "complete",
+    ...shape,
     contract: { ...contract, question: fixture.question, limitations: fixture.limitations },
     beforeId: fixture.beforeId,
     afterId: fixture.afterId,
@@ -202,6 +211,8 @@ export function viewFromFixture(fixture: StoredRunFixture, contract: RunContract
 }
 
 export type StoredDifferencePayload = {
+  width?: number;
+  height?: number;
   beforeNdvi: Array<number | null>;
   afterNdvi: Array<number | null>;
   difference: Array<number | null>;
@@ -238,9 +249,12 @@ export function viewFromRunArtifacts(
       error: "Missing or incomplete run artifacts.",
     });
   }
+  const shape = gridShape(difference.difference.length, difference.width, difference.height);
+  if (!shape) return createRunView({ status: "failed", error: unknownShapeMessage });
   const effectiveContract = record.contract ?? contract;
   return createRunView({
     status: "complete",
+    ...shape,
     contract: effectiveContract,
     beforeId: record.beforeId ?? difference.provenance.beforeId,
     afterId: record.afterId ?? difference.provenance.afterId,
@@ -258,4 +272,15 @@ export function viewFromRunArtifacts(
     acquiredBefore: record.acquiredBefore ?? "",
     acquiredAfter: record.acquiredAfter ?? "",
   });
+}
+
+const unknownShapeMessage = "Unknown raster grid shape in run artifacts.";
+
+/** Grid shape from stored dimensions, or a square grid for payloads written before they were stored. */
+function gridShape(length: number, width?: number, height?: number): { width: number; height: number } | undefined {
+  if (width !== undefined && height !== undefined) {
+    return width * height === length ? { width, height } : undefined;
+  }
+  const side = Math.sqrt(length);
+  return Number.isInteger(side) && side > 0 ? { width: side, height: side } : undefined;
 }

@@ -139,6 +139,8 @@ describe("The change report", () => {
         candidateCount: 0,
         threshold: 0.2,
         bbox: navarreExampleContract.aoi,
+        width: 1,
+        height: 1,
         beforeNdvi: [0],
         afterNdvi: [0],
         difference: [0],
