@@ -15,8 +15,8 @@ const reviewerModel = argValue("--reviewer-model", null);
 const implementerProvider = argValue("--implementer-provider", context.implementerProvider ?? null);
 const implementerModel = argValue("--implementer-model", context.implementerModel ?? null);
 
-if (!reviewerModel) fail("A verified reviewer model is required");
-if (!implementerModel) fail("A verified implementer model is required");
+if (!reviewerModel) fail("A reviewer model identity is required");
+if (!implementerModel) fail("An implementer model identity is required");
 
 const reviewerIdentity = reviewerProvider ? reviewerProvider + ":" + reviewerModel : reviewerModel;
 const implementerIdentity = implementerProvider ? implementerProvider + ":" + implementerModel : implementerModel;
@@ -40,7 +40,9 @@ const manifest = {
   reviewerIdentity,
   implementerIdentity,
   modelDistinct,
-  modelVerification: modelDistinct ? "verified" : "failed",
+  // Identities come from the operator's command line; this tool compares them but cannot prove them.
+  identitySource: "operator-declared",
+  modelVerification: modelDistinct ? "declared" : "failed",
 };
 
 const manifestAbsolute = absolutePath(root, manifestPath);

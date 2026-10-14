@@ -121,12 +121,14 @@ async function main() {
     reviewerIdentity: reviewerIdentity ?? null,
     implementerIdentity: implementerIdentity ?? null,
     modelDistinct,
-    modelVerification: modelDistinct ? "verified" : "unverified",
+    // The reviewer identity is the configured provider/model, not a value proven by the provider response.
+    identitySource: "operator-declared",
+    modelVerification: modelDistinct ? "declared" : "failed",
   };
   fs.mkdirSync(path.dirname(runManifestAbsolute), { recursive: true });
   fs.writeFileSync(runManifestAbsolute, JSON.stringify(runManifest, null, 2) + "\n");
   if (hasFlag("--gate") && !modelDistinct) {
-    throw new Error("Cross-model QA requires verifiable, distinct implementer and reviewer models");
+    throw new Error("Cross-model QA requires distinct declared implementer and reviewer models");
   }
 
   const validate = spawnSync(process.execPath, ["tools/qa/validate-qa-review.mjs", outputPath], { cwd: root, stdio: "inherit" });

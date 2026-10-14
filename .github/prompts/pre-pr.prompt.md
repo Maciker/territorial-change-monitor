@@ -36,16 +36,16 @@ Use this command after the executor finishes an implementation and before Cursor
 
    pnpm qa:validate
 
-6. Record the model evidence. The reviewer identity and implementer identity must be verifiable:
+6. Record the model evidence. Pass the identities the host actually reports; do not guess them:
 
    pnpm qa:record -- --reviewer-provider <provider> --reviewer-model <model> --implementer-provider <provider> --implementer-model <model>
 
-   If the host cannot provide either identity, stop instead of fabricating metadata.
+   If the host cannot provide either identity, stop instead of fabricating metadata. The manifest records `modelVerification: "declared"` and `identitySource: "operator-declared"`: the tools compare the identities but cannot prove them, so the operator is accountable for their accuracy and the PR must name them.
 7. Run the strict pre-PR gate:
 
    pnpm prepr:gate
 
-   This checks the exact head SHA, the working-tree snapshot, the QA-input digest, model distinction, schema and QA decision. A passing qa:gate alone is not sufficient.
+   This checks the exact head SHA, the working-tree snapshot, the QA-input digest, that the declared identities differ, schema and QA decision. A passing qa:gate alone is not sufficient.
 8. If the decision is iterate, apply only the listed fixes, at most two rounds. After every fix repeat steps 2–7. If the decision is stop, a P0/P1 blocker remains, deterministic checks fail, or the independent model is unavailable, stop and return control to the human.
 9. Only after pnpm prepr:gate passes may Cursor use its supported PR-creation action. Include the commands, exact models, score/decision, limitations and the fact that Cursor will perform a separate PR review. Do not merge or deploy.
 

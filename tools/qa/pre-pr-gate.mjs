@@ -43,8 +43,8 @@ const manifest = readJsonFile(root, manifestPath);
 if (manifest.schemaVersion !== 1) fail("Unsupported QA run manifest schema");
 if (manifest.headSha !== context.headSha) fail("QA invalidated: run manifest targets another head SHA");
 if (manifest.inputSha256 !== context.inputSha256) fail("QA invalidated: run manifest targets another QA input");
-if (manifest.modelVerification !== "verified" || manifest.modelDistinct !== true) {
-  fail("Independent model verification is missing; do not open the PR");
+if (manifest.modelVerification !== "declared" || manifest.modelDistinct !== true) {
+  fail("Distinct declared model identities are missing; do not open the PR");
 }
 
 const reviewAbsolute = absolutePath(root, outputPath);
@@ -61,5 +61,6 @@ console.log(JSON.stringify({
   headSha: context.headSha,
   reviewerIdentity: manifest.reviewerIdentity,
   implementerIdentity: manifest.implementerIdentity,
+  identitySource: manifest.identitySource,
   message: "Pre-PR QA gate passed for the exact reviewed worktree",
 }, null, 2));
