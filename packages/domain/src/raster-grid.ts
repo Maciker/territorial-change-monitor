@@ -9,18 +9,33 @@ export type RasterBand = {
   bbox: BoundingBox;
   crs: string;
   values: Float32Array;
+  /** NoData code in the raw (unscaled) units of the source file, when one is declared. */
   noData: number | undefined;
+  /** 1 where the raw sample is finite and differs from the NoData code. */
+  validData: Uint8Array;
   hash: string;
+};
+
+export type BandReadOptions = {
+  scale: number;
+  offset: number;
+  noData?: number;
 };
 
 export function applyScaleOffset(raw: Float32Array, scale: number, offset: number): Float32Array {
   return raw.map((value) => Math.fround(value * scale + offset));
 }
 
-export function validityMask(optical: Float32Array, noData: number | undefined, scl?: Float32Array): Uint8Array {
-  return Uint8Array.from(optical, (value, index) => {
-    if (Number.isNaN(value) || (noData !== undefined && value === noData)) return 0;
-    if (scl && invalidScl.has(scl[index]!)) return 0;
+export const excludedSclClasses: readonly number[] = [...invalidScl].sort((left, right) => left - right);
+
+export function rawValidData(raw: Float32Array, noData: number | undefined): Uint8Array {
+  return Uint8Array.from(raw, (value) => (Number.isNaN(value) || (noData !== undefined && value === noData) ? 0 : 1));
+}
+
+export function validityMask(optical: RasterBand, scl?: RasterBand): Uint8Array {
+  return Uint8Array.from(optical.values, (value, index) => {
+    if (optical.validData[index] !== 1 || Number.isNaN(value)) return 0;
+    if (scl && (scl.validData[index] !== 1 || invalidScl.has(scl.values[index]!))) return 0;
     return 1;
   });
 }

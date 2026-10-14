@@ -1,6 +1,6 @@
-import type { RasterBand } from "../../../domain/src/index.js";
+import type { BandReadOptions, RasterBand } from "../../../domain/src/index.js";
 
 export type RasterReader = {
-  readBand(path: string, scale: number, offset: number): Promise<RasterBand>;
+  readBand(path: string, options: BandReadOptions): Promise<RasterBand>;
   digest(path: string): Promise<string>;
 };

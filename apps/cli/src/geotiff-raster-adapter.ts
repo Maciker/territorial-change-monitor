@@ -1,7 +1,14 @@
 import { createHash } from "node:crypto";
 import { readFileSync, statSync } from "node:fs";
 import { fromArrayBuffer } from "geotiff";
-import { DomainError, applyScaleOffset, assertPixelBudget, type RasterBand } from "../../../packages/domain/src/index.js";
+import {
+  DomainError,
+  applyScaleOffset,
+  assertPixelBudget,
+  rawValidData,
+  type BandReadOptions,
+  type RasterBand,
+} from "../../../packages/domain/src/index.js";
 import { rasterLimits, type RasterReader } from "../../../packages/application/src/index.js";
 
 export class GeotiffRasterAdapter implements RasterReader {
@@ -9,7 +16,7 @@ export class GeotiffRasterAdapter implements RasterReader {
     return createHash("sha256").update(readBounded(path)).digest("hex");
   }
 
-  async readBand(path: string, scale: number, offset: number): Promise<RasterBand> {
+  async readBand(path: string, options: BandReadOptions): Promise<RasterBand> {
     const bytes = readBounded(path);
     const image = await (await fromArrayBuffer(Uint8Array.from(bytes).buffer)).getImage();
     const width = image.getWidth();
@@ -26,13 +33,15 @@ export class GeotiffRasterAdapter implements RasterReader {
     }
     const rasters = await image.readRasters();
     const raw = Float32Array.from(rasters[0] as ArrayLike<number>);
+    const noData = resolveNoData(image.getGDALNoData() ?? undefined, options.noData, path);
     return {
       width,
       height,
       bbox: { west, south, east, north, crs },
       crs,
-      values: applyScaleOffset(raw, scale, offset),
-      noData: 0,
+      values: applyScaleOffset(raw, options.scale, options.offset),
+      noData,
+      validData: rawValidData(raw, noData),
       hash: createHash("sha256").update(bytes).digest("hex"),
     };
   }
@@ -50,4 +59,11 @@ function readEpsg(keys: { GeographicTypeGeoKey?: number; ProjectedCSTypeGeoKey?:
   const code = keys.GeographicTypeGeoKey ?? keys.ProjectedCSTypeGeoKey;
   if (code === 4326) return "EPSG:4326";
   throw DomainError.createValidation(`Unsupported reprojection: raster CRS ${code ?? "unknown"} must already match`);
+}
+
+function resolveNoData(recorded: number | undefined, declared: number | undefined, path: string): number | undefined {
+  if (recorded !== undefined && declared !== undefined && recorded !== declared) {
+    throw DomainError.createValidation(`NoData mismatch for ${path}: file records ${recorded}, catalog declares ${declared}`);
+  }
+  return recorded ?? declared;
 }

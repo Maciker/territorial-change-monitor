@@ -1,11 +1,20 @@
 import { writeFileSync } from "node:fs";
 import type { BoundingBox } from "../../../packages/domain/src/index.js";
 
+const typeAscii = 2;
 const typeShort = 3;
 const typeLong = 4;
 const typeDouble = 12;
 
-export function writeGeotiff(path: string, values: ArrayLike<number>, width: number, height: number, bbox: BoundingBox, bits: 8 | 32): void {
+export function writeGeotiff(
+  path: string,
+  values: ArrayLike<number>,
+  width: number,
+  height: number,
+  bbox: BoundingBox,
+  bits: 8 | 32,
+  noData?: number,
+): void {
   const bytesPerSample = bits / 8;
   const strip = Buffer.alloc(width * height * bytesPerSample);
   if (bits === 8) {
@@ -38,11 +47,14 @@ export function writeGeotiff(path: string, values: ArrayLike<number>, width: num
     [33922, typeDouble, 6, 0],
     [34735, typeShort, 16, 0],
   ];
+  const noDataText = noData === undefined ? undefined : Buffer.from(`${noData}\0`, "ascii");
+  if (noDataText) tags.push([42113, typeAscii, noDataText.length, 0]);
 
   const ifdSize = 2 + tags.length * 12 + 4;
   const headerSize = 8;
   let offset = headerSize + ifdSize;
-  const extras = [scale, tie, geoKeys, strip];
+  const noDataInline = noDataText !== undefined && noDataText.length <= 4;
+  const extras = [scale, tie, geoKeys, strip, ...(noDataText && !noDataInline ? [noDataText] : [])];
   const extraOffsets = extras.map((buffer) => {
     const start = offset;
     offset += buffer.length;
@@ -52,6 +64,7 @@ export function writeGeotiff(path: string, values: ArrayLike<number>, width: num
   tags[10]![3] = extraOffsets[0]!;
   tags[11]![3] = extraOffsets[1]!;
   tags[12]![3] = extraOffsets[2]!;
+  if (noDataText && !noDataInline) tags[13]![3] = extraOffsets[4]!;
 
   const header = Buffer.alloc(headerSize);
   header.write("II");
@@ -64,7 +77,8 @@ export function writeGeotiff(path: string, values: ArrayLike<number>, width: num
     ifd.writeUInt16LE(tag[0], start);
     ifd.writeUInt16LE(tag[1], start + 2);
     ifd.writeUInt32LE(tag[2], start + 4);
-    if (tag[1] === typeShort && tag[2] === 1) ifd.writeUInt16LE(tag[3], start + 8);
+    if (tag[1] === typeAscii && noDataText && noDataInline) noDataText.copy(ifd, start + 8);
+    else if (tag[1] === typeShort && tag[2] === 1) ifd.writeUInt16LE(tag[3], start + 8);
     else ifd.writeUInt32LE(tag[3], start + 8);
   });
   writeFileSync(path, Buffer.concat([header, ifd, ...extras]));

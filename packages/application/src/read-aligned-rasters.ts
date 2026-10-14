@@ -4,7 +4,9 @@ import {
   assertSameGrid,
   combineMasks,
   validityMask,
+  type BandReadOptions,
   type RasterBand,
+  type SceneBand,
   type Scene,
   type ScenePair,
 } from "../../domain/src/index.js";
@@ -38,17 +40,23 @@ async function readScene(scene: Scene, reader: RasterReader): Promise<MaskedScen
   const redMeta = requiredBand(scene, "red");
   const nirMeta = requiredBand(scene, "nir");
   const sclMeta = scene.bands.find((band) => band.name === "scl");
-  const red = await reader.readBand(redMeta.href, redMeta.scale, redMeta.offset);
-  const nir = await reader.readBand(nirMeta.href, nirMeta.scale, nirMeta.offset);
-  const scl = sclMeta ? await reader.readBand(sclMeta.href, sclMeta.scale, sclMeta.offset) : undefined;
+  const red = await reader.readBand(redMeta.href, readOptions(redMeta));
+  const nir = await reader.readBand(nirMeta.href, readOptions(nirMeta));
+  const scl = sclMeta ? await reader.readBand(sclMeta.href, readOptions(sclMeta)) : undefined;
   assertPixelBudget(red.width, red.height, rasterLimits.maxPixels);
   assertSameGrid(red, nir);
   if (scl) assertSameGrid(red, scl);
   const valid = combineMasks([
-    validityMask(red.values, red.noData, scl?.values),
-    validityMask(nir.values, nir.noData, scl?.values),
+    validityMask(red, scl),
+    validityMask(nir, scl),
   ]);
   return { red, nir, valid };
+}
+
+function readOptions(band: SceneBand): BandReadOptions {
+  return band.noData === undefined
+    ? { scale: band.scale, offset: band.offset }
+    : { scale: band.scale, offset: band.offset, noData: band.noData };
 }
 
 function requiredBand(scene: Scene, name: "red" | "nir") {

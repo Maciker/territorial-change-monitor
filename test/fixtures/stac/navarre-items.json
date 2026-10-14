@@ -7,9 +7,9 @@
     "bbox": { "west": -1.77, "south": 42.79, "east": -1.74, "north": 42.82, "crs": "EPSG:4326" },
     "href": "https://example.test/items/S2A_20240612_NAVARRE",
     "bands": [
-      { "name": "red", "href": "test/fixtures/rasters/before-red.tif", "scale": 0.0001, "offset": 0 },
-      { "name": "nir", "href": "test/fixtures/rasters/before-nir.tif", "scale": 0.0001, "offset": 0 },
-      { "name": "scl", "href": "test/fixtures/rasters/before-scl.tif", "scale": 1, "offset": 0 }
+      { "name": "red", "href": "test/fixtures/rasters/before-red.tif", "scale": 0.0001, "offset": 0, "noData": 0 },
+      { "name": "nir", "href": "test/fixtures/rasters/before-nir.tif", "scale": 0.0001, "offset": 0, "noData": 0 },
+      { "name": "scl", "href": "test/fixtures/rasters/before-scl.tif", "scale": 1, "offset": 0, "noData": 0 }
     ]
   },
   {
@@ -20,9 +20,9 @@
     "bbox": { "west": -1.77, "south": 42.79, "east": -1.74, "north": 42.82, "crs": "EPSG:4326" },
     "href": "https://example.test/items/S2A_20250611_NAVARRE",
     "bands": [
-      { "name": "red", "href": "test/fixtures/rasters/after-red.tif", "scale": 0.0001, "offset": 0 },
-      { "name": "nir", "href": "test/fixtures/rasters/after-nir.tif", "scale": 0.0001, "offset": 0 },
-      { "name": "scl", "href": "test/fixtures/rasters/after-scl.tif", "scale": 1, "offset": 0 }
+      { "name": "red", "href": "test/fixtures/rasters/after-red.tif", "scale": 0.0001, "offset": 0, "noData": 0 },
+      { "name": "nir", "href": "test/fixtures/rasters/after-nir.tif", "scale": 0.0001, "offset": 0, "noData": 0 },
+      { "name": "scl", "href": "test/fixtures/rasters/after-scl.tif", "scale": 1, "offset": 0, "noData": 0 }
     ]
   }
 ]
