@@ -111,6 +111,26 @@ describe("The STAC adapters", () => {
     ]);
   });
 
+  it("defaults SCL to class-map scale when raster:bands is missing", async () => {
+    const adapter = adapterReturning({
+      features: [
+        feature({
+          B04: { href: "https://example.test/red.tif" },
+          B08: { href: "https://example.test/nir.tif" },
+          SCL: { href: "https://example.test/scl.tif" },
+        }),
+      ],
+    });
+
+    const items = await adapter.search(query());
+
+    expect(items[0]?.bands).toEqual([
+      { name: "red", href: "https://example.test/red.tif", scale: 0.0001, offset: 0 },
+      { name: "nir", href: "https://example.test/nir.tif", scale: 0.0001, offset: 0 },
+      { name: "scl", href: "https://example.test/scl.tif", scale: 1, offset: 0 },
+    ]);
+  });
+
   it("read scale, offset and NoData from the STAC raster extension", async () => {
     const adapter = adapterReturning({
       features: [

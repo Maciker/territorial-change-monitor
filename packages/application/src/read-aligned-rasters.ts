@@ -54,9 +54,9 @@ async function readScene(scene: Scene, reader: RasterReader): Promise<MaskedScen
 }
 
 function readOptions(band: SceneBand): BandReadOptions {
-  return band.noData === undefined
-    ? { scale: band.scale, offset: band.offset }
-    : { scale: band.scale, offset: band.offset, noData: band.noData };
+  const scale = band.name === "scl" ? 1 : band.scale;
+  const offset = band.name === "scl" ? 0 : band.offset;
+  return band.noData === undefined ? { scale, offset } : { scale, offset, noData: band.noData };
 }
 
 function requiredBand(scene: Scene, name: "red" | "nir") {

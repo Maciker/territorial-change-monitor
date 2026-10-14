@@ -110,11 +110,13 @@ function band(name: SceneBand["name"], asset: StacAsset | undefined): SceneBand 
   if (!asset?.href) return undefined;
   const raster = asset["raster:bands"]?.[0];
   const noData = raster?.nodata;
+  const isClassMap = name === "scl";
+  const defaultScale = isClassMap ? 1 : 0.0001;
   return {
     name,
     href: asset.href,
-    scale: raster?.scale ?? asset["raster:scale"] ?? 0.0001,
-    offset: raster?.offset ?? asset["raster:offset"] ?? 0,
+    scale: isClassMap ? 1 : (raster?.scale ?? asset["raster:scale"] ?? defaultScale),
+    offset: isClassMap ? 0 : (raster?.offset ?? asset["raster:offset"] ?? 0),
     ...(noData === undefined ? {} : { noData }),
   };
 }
