@@ -134,11 +134,11 @@ Keep numerical/spatial claims deterministic and preserve source data, CRS, NoDat
 
 ## Mandatory pre-PR cross-model QA
 
-Before Cursor opens a PR for agent-generated changes:
+Before any agent (Cursor, Codex, Claude Code or another host) opens a PR for agent-generated changes:
 
 1. Run the deterministic checks required by this repository, including `pnpm quality:full`.
 2. Run `pnpm qa:prepare` against the exact base/head SHA and clean worktree snapshot.
-3. Invoke `qa-cross-model` read-only with a fresh context and a verifiable model identity distinct from the implementer.
+3. Invoke `qa-cross-model` read-only with a fresh context and a model identity distinct from the implementer, as reported by the host. The tools record identities as operator-declared; they compare them but cannot prove them.
 4. Record and validate the JSON report, then run `pnpm prepr:gate`.
 5. Stop on `stop`, P0/P1, failed deterministic checks/tests, or unavailable independent model. Limit correction rounds to two and repeat the gate after every change.
 6. Do not open a PR if the report, SHA, input hash, worktree snapshot or model evidence is missing. A direct GitHub/API/vendor PR route may bypass this local workflow gate and is outside its coverage.

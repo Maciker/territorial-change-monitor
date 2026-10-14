@@ -8,7 +8,7 @@ Read AGENTS.md first. Then follow this workflow.
 
 # Pre-PR gate
 
-Use this command after the executor finishes an implementation and before Cursor opens a pull request. It is mandatory for agent-generated changes.
+Use this command after the executor finishes an implementation and before an agent opens a pull request (Cursor, Codex, Claude Code or another host). It is mandatory for agent-generated changes.
 
 ## Contract
 
@@ -47,7 +47,7 @@ Use this command after the executor finishes an implementation and before Cursor
 
    This checks the exact head SHA, the working-tree snapshot, the QA-input digest, that the declared identities differ, schema and QA decision. A passing qa:gate alone is not sufficient.
 8. If the decision is iterate, apply only the listed fixes, at most two rounds. After every fix repeat steps 2–7. If the decision is stop, a P0/P1 blocker remains, deterministic checks fail, or the independent model is unavailable, stop and return control to the human.
-9. Only after pnpm prepr:gate passes may Cursor use its supported PR-creation action. Include the commands, exact models, score/decision, limitations and the fact that Cursor will perform a separate PR review. Do not merge or deploy.
+9. Only after pnpm prepr:gate passes may the agent use its supported PR-creation action. Include the commands, the declared models, score/decision, limitations and the fact that a separate post-PR review follows. Do not merge or deploy.
 
 The gate protects the supported workflow path. A vendor or external integration that creates a PR without running this command may bypass it and must be documented as outside the covered path.
 
