@@ -1,12 +1,12 @@
 # Architecture
 
 ## Current scaffold
-The TypeScript MVP is a vertical slice over recorded fixtures: run contract, STAC ports, GeoTIFF adapter, NDVI difference, change review, resumable CLI and a local web viewer. Live downloads and hosted publishing are out of scope.
+The TypeScript MVP is a vertical slice over recorded synthetic fixtures: run contract, STAC ports, GeoTIFF adapter, NDVI difference, change review, a CLI that caches completed runs by source hashes, and a local web viewer. Live downloads and hosted publishing are out of scope.
 
 ## Dependency direction
 `apps/` contains entry points and delivery adapters (`cli`, `web`). `packages/domain/` contains pure computational behavior. `packages/application/` contains use cases and ports. Infrastructure adapters in `apps/cli` depend on those ports.
 
-Domain code must not depend on application, infrastructure, HTTP, filesystem, databases or browser APIs. CLI and web reuse contracts/use cases instead of duplicating rules. TypeScript is the implementation language throughout; SQL and QGIS desktop assets are external tools, not alternate application runtimes.
+Domain code must not depend on application, infrastructure, HTTP, filesystem, databases or browser APIs. `pnpm arch` enforces that `packages/` never imports `apps/` and that domain and application never import Node built-ins. CLI and web reuse contracts/use cases instead of duplicating rules. TypeScript is the implementation language throughout; SQL and QGIS desktop assets are external tools, not alternate application runtimes.
 
 ## Planned boundaries
 - Inputs are validated at adapters; preserve source metadata and stable IDs.
