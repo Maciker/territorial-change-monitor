@@ -1,9 +1,13 @@
 import { useEffect, useRef } from "react";
-import { Map } from "maplibre-gl";
+import { Map, setWorkerUrl } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+// Let Vite bundle the module worker with its shared chunk; MapLibre's default URL is not emitted by the build.
+import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import type { BoundingBox } from "../../../packages/domain/src/index.js";
 import { createOfflineAoiStyle } from "./offline-map-style.js";
 import { aoiMapCaption } from "./viewer-copy.js";
+
+setWorkerUrl(maplibreWorkerUrl);
 
 interface Props {
   bbox: BoundingBox;

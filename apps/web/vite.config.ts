@@ -39,6 +39,7 @@ function serveRunArtifact(request: IncomingMessage, response: ServerResponse, ne
 
 export default defineConfig({
   plugins: [react(), serveFixtureRunArtifacts()],
+  worker: { format: "es" },
   server: {
     port: 5173,
     fs: {
