@@ -28,6 +28,20 @@ describe("The bounded change run", () => {
     expect(JSON.parse(readFileSync(join(directory, "run.json"), "utf8")).status).toBe("complete");
   });
 
+  it("stores candidate flags as a plain array", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "change-run-"));
+
+    const { record } = await executeChangeRun({
+      contract: navarreExampleContract,
+      catalog: FixtureStacAdapter.fromFile("test/fixtures/stac/navarre-items.json"),
+      reader: new GeotiffRasterAdapter(),
+      store: new FilesystemRunStore(directory),
+    });
+
+    const stored = JSON.parse(readFileSync(join(directory, "run.json"), "utf8")) as { review: { candidateFlags: unknown } };
+    expect(stored.review.candidateFlags).toEqual(Array.from(record.review!.candidateFlags));
+  });
+
   it("records the effective contract with the run", async () => {
     const directory = mkdtempSync(join(tmpdir(), "change-run-"));
     const contract = { ...navarreExampleContract, question: "Which pixels changed in this rehearsal?" };
@@ -145,6 +159,7 @@ describe("The bounded change run", () => {
     const { record: third } = await executeChangeRun(input);
 
     expect(second.cacheHit).toBe(true);
+    expect(second.review?.candidateFlags).toBeInstanceOf(Uint8Array);
     expect(second.sourceHashes).toEqual(first.sourceHashes);
     expect(third.cacheHit).toBe(false);
     expect(third.sourceHashes?.[join(rasters, "before-red.tif")]).not.toBe(
