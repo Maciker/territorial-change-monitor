@@ -31,6 +31,9 @@ const reviewLimitations = [
   "Registration residuals can create false candidate edges.",
   "Residual clouds and cloud shadows can survive the SCL mask.",
   "Seasonality can change NDVI without a lasting land-surface conversion.",
+  "Scene coverage is estimated from catalog bounding boxes, not from valid-data footprints.",
+  "Cloud cover filtering uses scene-level metadata, not cloud cover over the AOI.",
+  "The change threshold is predeclared for screening and has not been calibrated against reference data.",
 ];
 
 export function reviewCandidateChange(input: ChangeReviewInput): ChangeReview {

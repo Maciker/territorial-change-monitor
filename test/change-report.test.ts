@@ -1,7 +1,13 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { excludedSclClasses, navarreExampleContract } from "../packages/domain/src/index.js";
-import { createRunView, formatChangeReport, viewFromFixture, type StoredRunFixture } from "../packages/application/src/index.js";
+import {
+  createRunView,
+  formatChangeReport,
+  minimumValidCoverage,
+  viewFromFixture,
+  type StoredRunFixture,
+} from "../packages/application/src/index.js";
 
 describe("The change report", () => {
   it("explains the question, method, evidence and limitations without causal claims", () => {
@@ -84,6 +90,39 @@ describe("The change report", () => {
     });
 
     expect(report.match(/not evidence of cause/g)).toHaveLength(1);
+  });
+
+  it("warns in the report when valid coverage is below the minimum", () => {
+    const base = {
+      contract: navarreExampleContract,
+      beforeId: "a",
+      afterId: "b",
+      candidateCount: 0,
+      threshold: 0.2,
+      acquiredBefore: "2024-06-12T10:55:00Z",
+      acquiredAfter: "2025-06-11T10:55:00Z",
+    };
+
+    expect(formatChangeReport({ ...base, validCoverage: 0.1 })).toContain(
+      `Coverage verdict: insufficient (below ${minimumValidCoverage})`,
+    );
+    expect(formatChangeReport({ ...base, validCoverage: 0.5 })).toContain("Coverage verdict: sufficient");
+  });
+
+  it("includes the review limitations next to the contract limitations", () => {
+    const report = formatChangeReport({
+      contract: navarreExampleContract,
+      beforeId: "a",
+      afterId: "b",
+      candidateCount: 0,
+      validCoverage: 1,
+      threshold: 0.2,
+      acquiredBefore: "2024-06-12T10:55:00Z",
+      acquiredAfter: "2025-06-11T10:55:00Z",
+      reviewLimitations: ["Scene coverage is estimated from catalog bounding boxes."],
+    });
+
+    expect(report).toContain("Scene coverage is estimated from catalog bounding boxes.");
   });
 
   it("exposes failed and insufficient-data views", () => {

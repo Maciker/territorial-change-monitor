@@ -15,7 +15,17 @@ export type ReportInput = {
   acquiredBefore: string;
   acquiredAfter: string;
   provenance?: ReportProvenance;
+  reviewLimitations?: readonly string[];
 };
+
+/** Below this share of valid pixels a run is reported as insufficient evidence. */
+export const minimumValidCoverage = 0.2;
+
+export type CoverageVerdict = "sufficient" | "insufficient";
+
+export function coverageVerdict(validCoverage: number): CoverageVerdict {
+  return validCoverage < minimumValidCoverage ? "insufficient" : "sufficient";
+}
 
 export type ReportProvenance = {
   collection: string;
@@ -71,8 +81,9 @@ export function formatChangeReport(input: ReportInput): string {
     `Question: ${input.contract.question}`,
     `Method: Sentinel-2 L2A NDVI difference (after - before) on the shared validity mask; a pixel is a candidate when |after - before| >= ${input.threshold}, so gains and losses both count.`,
     `Evidence: ${input.beforeId} acquired ${input.acquiredBefore} compared with ${input.afterId} acquired ${input.acquiredAfter}; ${input.candidateCount} candidate pixels${directionText(input)} at threshold ${input.threshold}; valid-pixel coverage ${input.validCoverage}.`,
+    coverageLine(input.validCoverage),
     ...provenanceLines(input),
-    `Limitations: ${limitationsText(input.contract.limitations)}`,
+    `Limitations: ${limitationsText([...input.contract.limitations, ...(input.reviewLimitations ?? [])])}`,
   ].join("\n");
 }
 
@@ -90,6 +101,12 @@ function provenanceLines(input: ReportInput): string[] {
     ...lines,
     `Sources: ${hashes}.`,
   ];
+}
+
+function coverageLine(validCoverage: number): string {
+  return coverageVerdict(validCoverage) === "insufficient"
+    ? `Coverage verdict: insufficient (below ${minimumValidCoverage}); too few valid pixels to interpret the candidates.`
+    : `Coverage verdict: sufficient (valid-pixel share of at least ${minimumValidCoverage}).`;
 }
 
 function limitationsText(limitations: readonly string[]): string {
@@ -117,7 +134,7 @@ export function createRunView(
   if (input.status === "failed") {
     return { kind: "failed", message: input.error ?? "The run failed." };
   }
-  if (input.validCoverage < 0.2) {
+  if (coverageVerdict(input.validCoverage) === "insufficient") {
     return { kind: "insufficient", message: "Insufficient valid pixels to review candidate change." };
   }
   return {
@@ -230,6 +247,7 @@ export function viewFromRunArtifacts(
     candidateCount: record.review?.candidateCount ?? 0,
     ...(record.review ? { gainCount: record.review.gainCount, lossCount: record.review.lossCount } : {}),
     ...reportProvenance(record),
+    ...(record.review ? { reviewLimitations: record.review.limitations } : {}),
     validCoverage: difference.validCoverage,
     threshold: record.review?.threshold ?? difference.provenance.changeThreshold,
     bbox: effectiveContract.aoi,

@@ -1,4 +1,5 @@
 import { DomainError, type RunContract, type ScenePair } from "../../domain/src/index.js";
+import { coverageVerdict } from "./change-report.js";
 import { computeNdviDifference, type NdviDifferenceResult } from "./compute-ndvi-difference.js";
 import type { RasterReader } from "./ports/raster-reader.js";
 import { readAlignedRasters } from "./read-aligned-rasters.js";
@@ -58,6 +59,7 @@ export async function executeChangeRun(options: {
     const difference = computeNdviDifference(options.contract, pair, rasters);
     record.completedStages.push("difference");
     record.validCoverage = difference.validCoverage;
+    record.coverageVerdict = coverageVerdict(difference.validCoverage);
     abortIfNeeded(options.signal, options.store, record);
     record.review = reviewDifference(options.contract, rasters, difference);
     record.completedStages.push("review");

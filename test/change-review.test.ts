@@ -44,6 +44,9 @@ describe("The candidate change review", () => {
     expect(review.candidateCount).toBe(1);
     expect(review.candidateAreaKm2).toBeGreaterThan(0);
     expect(review.limitations.join(" ")).toMatch(/seasonality|cloud|registration/i);
+    expect(review.limitations.join(" ")).toMatch(/bounding boxes/);
+    expect(review.limitations.join(" ")).toMatch(/scene-level/);
+    expect(review.limitations.join(" ")).toMatch(/not been calibrated/);
   });
 
   it("reports no candidates for a no-change pair", () => {

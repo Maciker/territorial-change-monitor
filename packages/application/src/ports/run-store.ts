@@ -12,6 +12,7 @@ export type RunRecord = {
   error?: string;
   review?: ChangeReview;
   validCoverage?: number;
+  coverageVerdict?: "sufficient" | "insufficient";
   beforeId?: string;
   afterId?: string;
   acquiredBefore?: string;

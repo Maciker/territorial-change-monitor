@@ -60,10 +60,12 @@ if (command === "validate") {
         acquiredBefore: record.acquiredBefore ?? "",
         acquiredAfter: record.acquiredAfter ?? "",
         ...reportProvenance(record),
+        reviewLimitations: record.review.limitations,
       }),
     );
   }
-  console.log(`Run ${record.status}; stages: ${record.completedStages.join(",")}`);
+  const verdict = record.coverageVerdict ? `; coverage ${record.coverageVerdict}` : "";
+  console.log(`Run ${record.status}; stages: ${record.completedStages.join(",")}${verdict}`);
 } else if (command === "fixtures") {
   writeGeotiff("test/fixtures/rasters/before-red.tif", [1000, 1000, 0, 2000], 2, 2, loadExampleContract().aoi, 32);
   console.log("Raster fixtures refreshed.");

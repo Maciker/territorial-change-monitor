@@ -24,6 +24,7 @@ describe("The bounded change run", () => {
 
     expect(record.status).toBe("complete");
     expect(record.completedStages).toEqual(["validate", "select", "read", "difference", "review"]);
+    expect(record.coverageVerdict).toBe("sufficient");
     expect(JSON.parse(readFileSync(join(directory, "run.json"), "utf8")).status).toBe("complete");
   });
 

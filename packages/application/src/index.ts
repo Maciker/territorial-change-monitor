@@ -9,8 +9,23 @@ export { reviewDifference } from "./review-change.js";
 export { executeChangeRun } from "./execute-change-run.js";
 export type { ChangeRunResult } from "./execute-change-run.js";
 export type { RunRecord, RunStage, RunStore } from "./ports/run-store.js";
-export { createRunView, formatChangeReport, reportProvenance, viewFromFixture, viewFromRunArtifacts } from "./change-report.js";
-export type { ReportInput, ReportProvenance, RunView, StoredDifferencePayload, StoredRunFixture } from "./change-report.js";
+export {
+  coverageVerdict,
+  createRunView,
+  formatChangeReport,
+  minimumValidCoverage,
+  reportProvenance,
+  viewFromFixture,
+  viewFromRunArtifacts,
+} from "./change-report.js";
+export type {
+  CoverageVerdict,
+  ReportInput,
+  ReportProvenance,
+  RunView,
+  StoredDifferencePayload,
+  StoredRunFixture,
+} from "./change-report.js";
 export { buildExplorationReading, exploreCandidateScenario } from "./explore-threshold.js";
 export type { ExploreCandidateInput, ExplorationReading } from "./explore-threshold.js";
 export { softwareVersion } from "./version.js";
