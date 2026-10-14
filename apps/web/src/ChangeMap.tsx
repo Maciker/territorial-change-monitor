@@ -7,11 +7,13 @@ import { aoiMapCaption } from "./viewer-copy.js";
 
 interface Props {
   bbox: BoundingBox;
+  width: number;
+  height: number;
 }
 
 export function ChangeMap(props: Props) {
   const container = useRef<HTMLDivElement>(null);
-  const mapCaption = aoiMapCaption(props.bbox.crs);
+  const mapCaption = aoiMapCaption(props.bbox.crs, props.width, props.height);
 
   useEffect(() => {
     if (!container.current) return;
@@ -48,9 +50,11 @@ export function ChangeMap(props: Props) {
   }, [props.bbox]);
 
   return (
-    <section className="map-panel" aria-label={mapCaption}>
-      <div ref={container} className="map-canvas" role="img" aria-label={mapCaption} />
-      <p className="map-caption">{mapCaption}</p>
+    <section className="map-panel">
+      <div ref={container} className="map-canvas" role="img" aria-label="AOI map" aria-describedby="map-caption" />
+      <p id="map-caption" className="map-caption">
+        {mapCaption}
+      </p>
     </section>
   );
 }

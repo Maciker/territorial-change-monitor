@@ -43,12 +43,12 @@ function ReadyRunView(props: { view: ReadyView }) {
     setExplorationThreshold(props.view.metadata.threshold);
   }, [props.view]);
 
-  const side = squareGridSide(props.view.valid.length);
+  const { width, height } = props.view;
   const scenario = exploreCandidateScenario({
     difference: props.view.difference,
     valid: props.view.valid,
-    width: side,
-    height: side,
+    width,
+    height,
     bbox: props.view.bbox,
     explorationThreshold,
     sign: props.view.metadata.changeSign,
@@ -63,27 +63,28 @@ function ReadyRunView(props: { view: ReadyView }) {
         explorationThreshold={explorationThreshold}
         candidateCount={scenario.candidateCount}
         candidateAreaKm2={scenario.candidateAreaKm2}
+        gridLabel={`${width}×${height}`}
         onExplorationThresholdChange={setExplorationThreshold}
       />
       <CandidateGrid
-        beforeNdvi={props.view.beforeNdvi}
-        afterNdvi={props.view.afterNdvi}
         difference={props.view.difference}
         valid={props.view.valid}
         candidateFlags={scenario.candidateFlags}
+        width={width}
       />
-      <ChangeMap bbox={props.view.bbox} />
-      <p className="fixture-note">{syntheticFixtureNote}</p>
-      <PixelGrid title="Before NDVI" values={props.view.beforeNdvi} valid={props.view.valid} />
-      <PixelGrid title="After NDVI" values={props.view.afterNdvi} valid={props.view.valid} />
-      <PixelGrid title="Difference and validity mask" values={props.view.difference} valid={props.view.valid} />
+      <ChangeMap bbox={props.view.bbox} width={width} height={height} />
+      <p className="fixture-note">{syntheticFixtureNote(width, height)}</p>
+      <PixelGrid title="Before NDVI" kind="ndvi" values={props.view.beforeNdvi} valid={props.view.valid} width={width} />
+      <PixelGrid title="After NDVI" kind="ndvi" values={props.view.afterNdvi} valid={props.view.valid} width={width} />
+      <PixelGrid
+        title="Difference and validity mask"
+        kind="difference"
+        values={props.view.difference}
+        valid={props.view.valid}
+        width={width}
+      />
     </main>
   );
-}
-
-function squareGridSide(length: number): number {
-  const side = Math.sqrt(length);
-  return Number.isInteger(side) ? side : 2;
 }
 
 async function loadRunArtifacts(): Promise<RunView> {
