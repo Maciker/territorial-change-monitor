@@ -6,7 +6,6 @@ import { FilesystemRunStore } from "./filesystem-run-store.js";
 import { GeotiffRasterAdapter } from "./geotiff-raster-adapter.js";
 import { fixtureCatalog, loadExampleContract, runFixturePipeline } from "./fixture-pipeline.js";
 import { writeDifferenceGeotiff, writeDifferenceResult } from "./write-difference-result.js";
-import { writeGeotiff } from "./write-geotiff.js";
 import { writeQgisRecipe } from "./write-qgis-recipe.js";
 import { writeRunViewerArtifacts } from "./write-run-viewer-artifacts.js";
 
@@ -66,12 +65,9 @@ if (command === "validate") {
   }
   const verdict = record.coverageVerdict ? `; coverage ${record.coverageVerdict}` : "";
   console.log(`Run ${record.status}; stages: ${record.completedStages.join(",")}${verdict}`);
-} else if (command === "fixtures") {
-  writeGeotiff("test/fixtures/rasters/before-red.tif", [1000, 1000, 0, 2000], 2, 2, loadExampleContract().aoi, 32);
-  console.log("Raster fixtures refreshed.");
 } else if (command === "demo") {
   console.log(formatKernelDemo());
 } else {
-  console.error("Supported commands: demo, validate, select, read, difference, review, run, fixtures");
+  console.error("Supported commands: demo, validate, select, read, difference, review, run");
   process.exitCode = 1;
 }
